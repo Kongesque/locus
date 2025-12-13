@@ -9,7 +9,7 @@
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
 </head>
 
-<body class="bg-black text-white font-sans">
+<body class="bg-black text-white font-sans h-screen overflow-hidden flex flex-col">
 
     <div id="loading" class="loading-overlay">
         <img src="">
@@ -23,11 +23,12 @@
         </a>
     </header>
 
-    <main id="content" class="flex items-center justify-center p-6">
-        <div class="flex w-full gap-6 min-h-[calc(100vh-140px)]">
+    <main id="content" class="flex-1 flex items-center justify-center p-4 md:p-6 overflow-hidden">
+        <div class="flex flex-col md:flex-row w-full h-full gap-4 md:gap-6">
 
             <!-- Tools Sidebar -->
-            <section class="card w-[280px] p-6 flex flex-col justify-between">
+            <section
+                class="card w-full md:w-[280px] shrink-0 p-4 md:p-6 flex flex-col gap-4 md:justify-between order-2 md:order-1">
                 <div>
                     <h2 class="text-sm font-semibold text-white mb-4">Area Selection</h2>
 
@@ -47,21 +48,21 @@
                         <!-- Colors -->
                         <div>
                             <label class="text-sm text-gray-300 block mb-2">Colors</label>
-                            <ul class="options flex gap-2">
+                            <ul class="options flex flex-wrap gap-2">
                                 <li
-                                    class="option w-5 h-5 rounded-full cursor-pointer bg-red-500 opacity-60 hover:opacity-100">
+                                    class="option w-6 h-6 md:w-5 md:h-5 rounded-full cursor-pointer bg-red-500 opacity-60 hover:opacity-100">
                                 </li>
                                 <li
-                                    class="option selected w-5 h-5 rounded-full cursor-pointer bg-yellow-500 ring-2 ring-white ring-offset-2 ring-offset-gray-600">
+                                    class="option selected w-6 h-6 md:w-5 md:h-5 rounded-full cursor-pointer bg-yellow-500 ring-2 ring-white ring-offset-2 ring-offset-gray-600">
                                 </li>
                                 <li
-                                    class="option w-5 h-5 rounded-full cursor-pointer bg-green-500 opacity-60 hover:opacity-100">
+                                    class="option w-6 h-6 md:w-5 md:h-5 rounded-full cursor-pointer bg-green-500 opacity-60 hover:opacity-100">
                                 </li>
                                 <li
-                                    class="option w-5 h-5 rounded-full cursor-pointer bg-blue-500 opacity-60 hover:opacity-100">
+                                    class="option w-6 h-6 md:w-5 md:h-5 rounded-full cursor-pointer bg-blue-500 opacity-60 hover:opacity-100">
                                 </li>
                                 <li
-                                    class="option w-5 h-5 rounded-full cursor-pointer bg-purple-500 opacity-60 hover:opacity-100">
+                                    class="option w-6 h-6 md:w-5 md:h-5 rounded-full cursor-pointer bg-purple-500 opacity-60 hover:opacity-100">
                                 </li>
                             </ul>
                         </div>
@@ -70,11 +71,11 @@
 
                         <!-- Clear Button -->
                         <button
-                            class="draw w-full py-2 text-sm text-gray-300 border border-dashed border-gray-400 rounded-lg hover:border-white hover:text-white transition-all">Clear</button>
+                            class="draw w-full py-2.5 md:py-2 text-sm text-gray-300 border border-dashed border-gray-400 rounded-lg hover:border-white hover:text-white transition-all">Clear</button>
                     </div>
                 </div>
 
-                <form action="{{ url_for('submit') }}" method="post">
+                <form action="{{ url_for('submit') }}" method="post" class="mt-4 md:mt-0">
                     <div class="run disable">
                         <button class="process btn-primary w-full py-3" onclick="loading();">Process</button>
                     </div>
@@ -82,16 +83,18 @@
             </section>
 
             <!-- Canvas Area -->
-            <section class="flex-1 card flex items-center justify-center">
+            <section
+                class="flex-1 card flex items-center justify-center p-2 md:p-4 order-1 md:order-2 min-h-0 overflow-hidden">
                 <img id="image" src="{{ url_for('media_file', filename='frames/' + 'frame_' + taskID + '.jpg') }}"
                     hidden>
-                <canvas class="display max-w-full max-h-[calc(100vh-180px)] rounded-lg" id="canvas"></canvas>
+                <canvas class="display max-w-full max-h-full rounded-lg" id="canvas"></canvas>
             </section>
         </div>
     </main>
 
-    <footer id="content" class="flex justify-between items-center py-4 px-6 border-t border-gray-500">
-        <div class="flex gap-6 text-sm text-gray-300">
+    <footer id="content"
+        class="flex flex-col md:flex-row justify-between items-center gap-2 py-4 px-4 md:px-6 border-t border-gray-500">
+        <div class="flex gap-4 md:gap-6 text-sm text-gray-300">
             <p class="size-width">
                 <span>Width: </span>
                 <span class="value text-white"> - px</span>

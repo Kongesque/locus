@@ -9,7 +9,7 @@
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
 </head>
 
-<body class="bg-black text-white font-sans">
+<body class="bg-black text-white font-sans h-screen overflow-hidden flex flex-col">
 
     <div id="loading" class="loading-overlay">
         <img src="">
@@ -26,8 +26,8 @@
         </a>
     </header>
 
-    <main id="content" class="flex items-center justify-center p-6">
-        <div class="flex w-full h-[calc(100vh-140px)]">
+    <main id="content" class="flex-1 flex items-center justify-center p-4 md:p-6 overflow-hidden">
+        <div class="flex w-full h-full">
             <video class="rounded-xl w-full object-contain bg-gray-600" controls>
                 <source src="{{ url_for('media_file', filename='outputs/' + 'output_' + taskID + '.mp4') }}"
                     type="video/mp4">
@@ -35,8 +35,9 @@
         </div>
     </main>
 
-    <footer id="content" class="flex justify-between items-center py-4 px-6 border-t border-gray-500">
-        <div class="flex gap-6 text-sm text-gray-300">
+    <footer id="content"
+        class="flex flex-col md:flex-row justify-between items-center gap-4 py-4 px-4 md:px-6 border-t border-gray-500">
+        <div class="flex gap-4 md:gap-6 text-sm text-gray-300">
             <p class="size-width">
                 <span>Width: </span>
                 <span class="value text-white"> - px</span>

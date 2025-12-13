@@ -9,7 +9,7 @@
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
 </head>
 
-<body class="bg-black text-white font-sans">
+<body class="bg-black text-white font-sans h-screen overflow-hidden flex flex-col">
 
     <div id="loading" class="loading-overlay">
         <img src="">
@@ -24,15 +24,17 @@
         <button class="btn-secondary">How to use</button>
     </header>
 
-    <main id="content" class="flex items-center justify-center flex-col text-center min-h-[calc(100vh-140px)]">
-        <div class="mb-12">
-            <h1 class="text-5xl font-bold text-white tracking-tight leading-tight">Counting Livestock<br>in Just a Few
+    <main id="content" class="flex-1 flex items-center justify-center flex-col text-center px-4 overflow-hidden">
+        <div class="mb-8 md:mb-12">
+            <h1 class="text-3xl md:text-5xl font-bold text-white tracking-tight leading-tight">Counting Livestock<br>in
+                Just a Few
                 Clicks</h1>
-            <p class="text-base text-gray-300 mt-4">Count and monitor livestock with<br>exceptional accuracy and
+            <p class="text-sm md:text-base text-gray-300 mt-4">Count and monitor livestock with<br>exceptional accuracy
+                and
                 efficiency.</p>
         </div>
 
-        <div class="flex items-center justify-center">
+        <div class="flex items-center justify-center px-4">
 
             <form id="uploadForm" method='POST' enctype="multipart/form-data" hidden>
                 {{ form.hidden_tag() }}
@@ -44,8 +46,8 @@
             </form>
 
             <label for="input-file" id="drop-area"
-                class="w-[420px] p-10 text-center rounded-xl cursor-pointer transition-all duration-200 border border-dashed border-gray-400 hover:border-white hover:bg-gray-600">
-                <div id="file-view" class="flex flex-col items-center gap-6">
+                class="w-full max-w-[420px] p-8 md:p-10 text-center rounded-xl cursor-pointer transition-all duration-200 border border-dashed border-gray-400 hover:border-white hover:bg-gray-600">
+                <div id="file-view" class="flex flex-col items-center gap-4 md:gap-6">
                     <div class="flex items-center gap-3">
                         <img src="{{ url_for('static', filename='img/upload.svg') }}" class="w-6 h-6 invert opacity-60">
                         <span class="text-white font-medium">Choose Files</span>
