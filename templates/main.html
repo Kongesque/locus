@@ -9,7 +9,7 @@
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
 </head>
 
-<body class="bg-background text-sidebar-foreground h-screen overflow-hidden">
+<body class="bg-background text-sidebar-foreground h-screen overflow-hidden flex flex-col">
 
     <div id="loading" class="loading-overlay">
         <img src="">
@@ -21,52 +21,58 @@
     <div id="backdrop" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 hidden lg:hidden"
         onclick="toggleSidebar()"></div>
 
+    <!-- Header (outside app-container so sidebar doesn't push it) -->
+    <header id="content" class="flex justify-between items-center py-2 pl-3 pr-2">
+        <a href="{{ url_for('main') }}" class="no-underline">
+            <div class="text-lg font-semibold text-text-color tracking-tight">ZoneNet</div>
+        </a>
+        <div class="flex items-center gap-2">
+            <a href="mailto:kongesque@gmail.com" class="btn-secondary no-underline">Feedback</a>
+            <a href="https://github.com/Kongesque" target="_blank"
+                class="w-6 h-6 flex items-center justify-center rounded-full">
+                <img src="{{ url_for('static', filename='img/github.svg') }}" class="w-6 h-6 invert opacity-80">
+            </a>
+        </div>
+    </header>
+
     <!-- Main Layout Container -->
-    <div id="app-container" class="flex h-screen">
+    <div id="app-container" class="flex flex-1 overflow-hidden">
 
         <!-- Sidebar -->
         <aside id="sidebar"
-            class="fixed lg:relative z-50 h-full bg-sidebar border-r border-sidebar-border lg:border-r-0 flex flex-col overflow-hidden transition-all duration-300 ease-in-out -translate-x-full lg:translate-x-0 w-64 lg:w-0"
+            class="fixed lg:relative z-50 h-full bg-background flex flex-col overflow-hidden transition-all duration-300 ease-in-out -translate-x-full lg:translate-x-0 w-60 lg:w-0"
             data-expanded="false">
 
-            <!-- Sidebar Header -->
-            <div class="flex items-center justify-between px-4 py-3 border-b border-sidebar-border">
-                <a href="{{ url_for('main') }}" class="flex items-center gap-3 no-underline">
-                    <div class="w-8 h-8 bg-sidebar-accent rounded-lg flex items-center justify-center shrink-0">
-                        <span class="text-sidebar-accent-foreground font-bold text-sm">Z</span>
-                    </div>
-                    <span id="sidebar-title"
-                        class="text-lg font-semibold text-sidebar-foreground tracking-tight hidden">ZoneNet</span>
-                </a>
-            </div>
+            <!-- Sidebar Content -->
+            <nav class="flex-1 p-1 space-y-1 overflow-y-auto overflow-x-hidden w-60">
+                <!-- Section Header -->
+                <div class="px-2 py-2">
+                    <span class="text-sm font-medium text-sidebar-foreground whitespace-nowrap">History</span>
+                </div>
 
-            <!-- Sidebar Content (empty for now) -->
-            <nav class="flex-1 p-2 space-y-1">
-                <!-- Add navigation items here later -->
+                <!-- Navigation Items -->
+                <a href="#"
+                    class="block px-2 py-2 text-sm text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-md whitespace-nowrap overflow-hidden text-ellipsis">
+                    Video 1
+                </a>
+                <a href="#"
+                    class="block px-2 py-2 text-sm text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-md whitespace-nowrap overflow-hidden text-ellipsis">
+                    Video 2
+                </a>
+                <a href="#"
+                    class="block px-2 py-2 text-sm text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-md whitespace-nowrap overflow-hidden text-ellipsis">
+                    Video 3
+                </a>
             </nav>
         </aside>
 
         <!-- Main Content Area -->
         <div class="flex-1 flex flex-col min-w-0 overflow-auto">
 
-            <!-- Header -->
-            <header id="content" class="flex justify-between items-center px-2 py-2">
-                <a href="{{ url_for('main') }}" class="no-underline">
-                    <div class="text-lg font-semibold text-text-color tracking-tight">ZoneNet</div>
-                </a>
-                <div class="flex items-center gap-2">
-                    <button class="btn-secondary">Feedback</button>
-                    <a href="https://github.com/Kongesque" target="_blank"
-                        class="w-6 h-6 flex items-center justify-center rounded-full">
-                        <img src="{{ url_for('static', filename='img/github.svg') }}" class="w-6 h-6 invert opacity-80">
-                    </a>
-                </div>
-            </header>
-
 
             <!-- Main Content -->
             <main id="content"
-                class="relative flex-1 flex items-center justify-center flex-col text-center mx-2 mt-1 mb-2 overflow-hidden bg-sidebar border border-sidebar-border rounded-md">
+                class="relative flex-1 flex items-center justify-center flex-col text-center mx-2 mt-1 mb-2 overflow-hidden bg-primary-color border border-primary-border rounded-md">
 
                 <!-- Sidebar Toggle -->
                 <button onclick="toggleSidebar()"
@@ -125,8 +131,6 @@
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('backdrop');
-            const title = document.getElementById('sidebar-title');
-            const labels = document.querySelectorAll('.sidebar-label');
             const isMobile = window.innerWidth < 1024;
 
             sidebarExpanded = !sidebarExpanded;
@@ -143,21 +147,15 @@
                     sidebar.classList.add('-translate-x-full');
                     backdrop.classList.add('hidden');
                 }
-                // Always show labels on mobile when open
-                title.classList.toggle('hidden', !sidebarExpanded);
-                labels.forEach(l => l.classList.toggle('hidden', !sidebarExpanded));
             } else {
-                // Desktop: push sidebar width toggle
+                // Desktop: push sidebar width toggle (only affects main content)
                 if (sidebarExpanded) {
-                    sidebar.classList.remove('lg:w-0', 'lg:border-r-0');
-                    sidebar.classList.add('lg:w-64', 'lg:border-r');
+                    sidebar.classList.remove('lg:w-0');
+                    sidebar.classList.add('lg:w-60');
                 } else {
-                    sidebar.classList.remove('lg:w-64', 'lg:border-r');
-                    sidebar.classList.add('lg:w-0', 'lg:border-r-0');
+                    sidebar.classList.remove('lg:w-60');
+                    sidebar.classList.add('lg:w-0');
                 }
-                // Toggle labels visibility
-                title.classList.toggle('hidden', !sidebarExpanded);
-                labels.forEach(l => l.classList.toggle('hidden', !sidebarExpanded));
             }
         }
 
