@@ -1,5 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+
+/* Geist Sans from Fontsource CDN */
+@font-face {
+    font-family: 'Geist Sans';
+    font-style: normal;
+    font-display: swap;
+    font-weight: 100 900;
+    src: url(https://cdn.jsdelivr.net/fontsource/fonts/geist-sans@latest/latin-400-normal.woff2) format('woff2');
+}
 
 @theme {
     --color-text-color: #EDEDED;
@@ -22,7 +30,16 @@
 
     --color-bg-color: #000000;
 
-    --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    /* Sidebar semantic tokens */
+    --color-sidebar: #0A0A0A;
+    --color-sidebar-border: #272727;
+    --color-sidebar-foreground: #EDEDED;
+    --color-sidebar-accent: #1A1A1A;
+    --color-sidebar-accent-foreground: #FFFFFF;
+    --color-muted-foreground: #A1A1A1;
+    --color-background: #000000;
+
+    --font-family-sans: 'Geist Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 @layer base {
