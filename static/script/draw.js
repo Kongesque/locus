@@ -19,13 +19,21 @@ selectedPoint = 4;
 
 let width = previewFrame.naturalWidth, height = previewFrame.naturalHeight; 
 
-canvas.width = previewFrame.naturalWidth;
-canvas.height = previewFrame.naturalHeight;
+const initializeCanvas = () => {
+    width = previewFrame.naturalWidth;
+    height = previewFrame.naturalHeight;
+    canvas.width = width;
+    canvas.height = height;
+    ctx.drawImage(previewFrame, 0, 0);
+    document.querySelector(".size-width .value").textContent = width + " px";
+    document.querySelector(".size-height .value").textContent = height + " px";
+}
 
-ctx.drawImage(previewFrame, 0, 0);
-
-document.querySelector(".size-width .value").textContent = width + " px";
-document.querySelector(".size-height .value").textContent = height + " px";
+if (previewFrame.complete) {
+    initializeCanvas();
+} else {
+    previewFrame.addEventListener('load', initializeCanvas);
+}
 
 
 const updatePoint = () => {
