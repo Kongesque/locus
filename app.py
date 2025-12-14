@@ -2,10 +2,7 @@ from flask import Flask, render_template, request, session, jsonify, redirect, u
 from flask_wtf import FlaskForm
 from wtforms import FileField, SubmitField
 from wtforms.validators import InputRequired
-from werkzeug.utils import secure_filename
 import os
-import cv2
-import uuid
 from core.detector import detection
 from utils.file_handler import handle_upload
 from utils.db import init_db, get_job, update_job, get_all_jobs, delete_job
@@ -50,7 +47,6 @@ def draw():
     taskID = session.get('taskID')
     if not taskID:
         return redirect(url_for('main'))
-        
 
     job = get_job(taskID)
     if not job:
@@ -77,6 +73,19 @@ def submit():
     for _ in detection(job['video_path'], job['points'], (job['frame_width'], job['frame_height']), job['color'], taskID):
         pass
         
+    # Cleanup source files
+    if job.get('video_path') and os.path.exists(job['video_path']):
+        try:
+            os.remove(job['video_path'])
+        except OSError:
+            pass
+            
+    if job.get('frame_path') and os.path.exists(job['frame_path']):
+        try:
+            os.remove(job['frame_path'])
+        except OSError:
+            pass
+
     return redirect(url_for('result'))
 
 @app.route('/result', methods=['GET', 'POST']) 
@@ -100,8 +109,15 @@ def result():
     if request.method == 'POST' and form.validate_on_submit():
         handle_upload(form.file.data, app.config['UPLOAD_FOLDER'])
         return redirect(url_for('draw'))
-    return render_template('result.html', form=form, taskID=taskID)
-
+        
+    job = get_job(taskID)
+    if not job:
+        return redirect(url_for('main'))
+        
+    width = job.get('frame_width')
+    height = job.get('frame_height')
+    
+    return render_template('result.html', form=form, taskID=taskID, width=width, height=height)
 
 @app.route('/get_coordinates', methods=['POST'])
 def get_coordinates():
@@ -125,8 +141,6 @@ def color_setting():
     update_job(taskID, color=color)
     return jsonify({"message": "Color settings updated successfully"})
 
-
-
 @app.route('/clear', methods=['POST'])
 def clear_coordinates():
     taskID = session.get('taskID')
@@ -136,10 +150,34 @@ def clear_coordinates():
 # History API
 @app.route('/api/history/<task_id>', methods=['DELETE'])
 def delete_history(task_id):
-    # Optional: Delete files from disk as well? For now, just DB.
-    # To be thorough:
-    # job = get_job(task_id)
-    # if job: os.remove(job['video_path']) ...
+    job = get_job(task_id)
+    if job:
+        # Delete video file
+        if job.get('video_path'):
+            video_path = job['video_path']
+            if os.path.exists(video_path):
+                try:
+                    os.remove(video_path)
+                except OSError:
+                    pass
+
+        # Delete frame file
+        if job.get('frame_path'):
+            frame_path = job['frame_path']
+            if os.path.exists(frame_path):
+                try:
+                    os.remove(frame_path)
+                except OSError:
+                    pass
+
+        # Delete output video
+        output_path = os.path.join('uploads/outputs', f'output_{task_id}.mp4')
+        if os.path.exists(output_path):
+            try:
+                os.remove(output_path)
+            except OSError:
+                pass
+
     delete_job(task_id)
     
     if session.get('taskID') == task_id:

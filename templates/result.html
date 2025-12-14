@@ -1,9 +1,6 @@
 {% extends 'base.html' %}
 
 {% block header_actions %}
-<a href="{{ url_for('media_file', filename='outputs/' + 'output_' + taskID + '.mp4') }}" download>
-    <button class="btn-secondary">Download</button>
-</a>
 {% endblock %}
 
 {% block content %}
@@ -28,11 +25,11 @@
     <div class="flex gap-4 md:gap-6 text-sm text-gray-300">
         <p class="size-width">
             <span>Width: </span>
-            <span class="value text-text-color"> - px</span>
+            <span class="value text-text-color"> {{ width }} px</span>
         </p>
         <p class="size-height">
             <span>Height: </span>
-            <span class="value text-text-color"> - px</span>
+            <span class="value text-text-color"> {{ height }} px</span>
         </p>
     </div>
     <div class="flex items-center gap-3">
@@ -56,12 +53,4 @@
 
 {% block scripts %}
 <script src="{{url_for('static', filename='script/result.js')}}"></script>
-<script>
-    var image = new Image();
-    image.src = "{{ url_for('media_file', filename='frames/' + 'frame_' + taskID + '.jpg') }}";
-    image.onload = function () {
-        document.querySelector(".size-width .value").textContent = this.naturalWidth + " px";
-        document.querySelector(".size-height .value").textContent = this.naturalHeight + " px";
-    };
-</script>
 {% endblock %}

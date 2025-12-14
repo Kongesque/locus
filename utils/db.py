@@ -1,6 +1,5 @@
 import sqlite3
 import json
-import os
 
 DB_PATH = 'tasks.db'
 

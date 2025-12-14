@@ -51,7 +51,7 @@ def detection(path_x, Area, frame_size, areaColor, taskID):
 
         if frame_counter not in array: 
             continue
-        # if frame_counter % 5 != 0: continue
+
 
         results = model.track(frame, classes=ClassID, persist=True, save=False, tracker="bytetrack.yaml")
         boxes = results[0].boxes.xywh.cpu()

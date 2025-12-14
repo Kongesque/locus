@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZoneNet Test</title>
+    <link rel="stylesheet" href="./css/output.css">
+</head>
+
+<body class="bg-bg-color text-text-color font-sans h-screen overflow-hidden flex flex-col">
+
+    <button onclick="loading()" class="btn-primary m-10 p-4">Test Loading Screen (with Progress Bar)</button>
+
+    <!-- Loading Screen -->
+    <div id="loading"
+        class="hidden fixed inset-0 z-50 bg-bg-color flex flex-col items-center justify-center h-screen w-screen">
+        <img src="" alt="Processing" class="w-32 h-32 mb-4 object-contain">
+        <p class="text-xl font-semibold text-text-color mb-2 text-center"></p>
+        <span class="text-sm text-gray-400 text-center leading-relaxed mb-6"></span>
+
+        <!-- Progress Bar -->
+        <div class="w-64 h-2 bg-gray-700 rounded-full overflow-hidden">
+            <div id="progressBar" class="h-full bg-blue-500 rounded-full transition-all duration-300 ease-out"
+                style="width: 0%"></div>
+        </div>
+        <p id="progressText" class="text-xs text-gray-500 mt-2">0%</p>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        function loading() {
+            $("#loading").removeClass("hidden").css("display", "flex");
+            $("#loading img").attr("src", "./img/cow.gif");
+            $("#loading p").text("Processing files...");
+            $("#loading span").html("The process may take a moment, please<br>keep this window open.");
+
+            // Progress Bar Animation
+            let progress = 0;
+            const bar = document.getElementById('progressBar');
+            const text = document.getElementById('progressText');
+
+            const interval = setInterval(() => {
+                // Simulate progress with random increments
+                progress += Math.random() * 2;
+
+                // Slow down approach to 99%
+                if (progress > 99) {
+                    progress = 99;
+                    clearInterval(interval);
+                }
+
+                bar.style.width = progress + '%';
+                text.innerText = Math.round(progress) + '%';
+            }, 100); // Faster for test
+        };
+    </script>
+
+</body>
+
+</html>
