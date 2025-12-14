@@ -8,7 +8,7 @@ import cv2
 import uuid
 from core.detector import detection
 from utils.file_handler import handle_upload
-from utils.db import init_db, get_job, update_job
+from utils.db import init_db, get_job, update_job, get_all_jobs, delete_job
 
 init_db()
 
@@ -24,6 +24,13 @@ os.makedirs('uploads/outputs', exist_ok=True)
 class UploadFileForm(FlaskForm):
     file = FileField("File", validators=[InputRequired()])
     submit = SubmitField("Run")
+
+# Context Processor to inject history into all templates
+@app.context_processor
+def inject_history():
+    jobs = get_all_jobs()
+    # If there's an active taskID in session, pass it to highlight current job
+    return dict(history_jobs=jobs, current_taskID=session.get('taskID'))
 
 # Routes
 @app.route('/media/<path:filename>')
@@ -74,6 +81,17 @@ def submit():
 
 @app.route('/result', methods=['GET', 'POST']) 
 def result():
+    # Helper to check if taskID is provided in args, else use session
+    req_taskID = request.args.get('taskID')
+    
+    if req_taskID:
+        # Switch session to this taskID if valid
+        job = get_job(req_taskID)
+        if job:
+            session['taskID'] = req_taskID
+        else:
+            return redirect(url_for('main'))
+            
     taskID = session.get('taskID')
     if not taskID:
         return redirect(url_for('main'))
@@ -114,6 +132,29 @@ def clear_coordinates():
     taskID = session.get('taskID')
     update_job(taskID, points=[])
     return jsonify({"message": "Coordinates cleared successfully"})
+
+# History API
+@app.route('/api/history/<task_id>', methods=['DELETE'])
+def delete_history(task_id):
+    # Optional: Delete files from disk as well? For now, just DB.
+    # To be thorough:
+    # job = get_job(task_id)
+    # if job: os.remove(job['video_path']) ...
+    delete_job(task_id)
+    
+    if session.get('taskID') == task_id:
+        session.pop('taskID', None)
+        
+    return jsonify({"success": True})
+
+@app.route('/api/history/<task_id>/rename', methods=['POST'])
+def rename_history(task_id):
+    data = request.json
+    new_name = data.get('name')
+    if new_name:
+        update_job(task_id, name=new_name)
+        return jsonify({"success": True})
+    return jsonify({"success": False, "error": "No name provided"}), 400
     
 if __name__ == "__main__":
-    app.run(debug=True) 
+    app.run(debug=True)

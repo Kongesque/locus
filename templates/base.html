@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZoneNet</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
+    {% block head %}{% endblock %}
+</head>
+
+<body class="bg-background text-sidebar-foreground h-screen overflow-hidden flex flex-col">
+
+    <!-- Loading Overlay -->
+    <div id="loading" class="loading-overlay">
+        <img src="">
+        <p></p>
+        <span></span>
+    </div>
+
+    <!-- Mobile Backdrop -->
+    <div id="backdrop" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 hidden lg:hidden"
+        onclick="toggleSidebar()"></div>
+
+    <!-- Header -->
+    <header id="content-header" class="flex justify-between items-center py-2 px-3">
+        <a href="{{ url_for('main') }}" class="no-underline">
+            <div class="text-lg font-semibold text-text-color tracking-tight">ZoneNet</div>
+        </a>
+        <div class="flex items-center gap-2">
+            {% block header_actions %}
+            <a href="mailto:kongesque@gmail.com" class="btn-secondary no-underline">Feedback</a>
+            {% endblock %}
+            <a href="https://github.com/Kongesque" target="_blank"
+                class="w-6 h-6 flex items-center justify-center rounded-full">
+                <img src="{{ url_for('static', filename='img/github.svg') }}" class="w-6 h-6 invert opacity-80">
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Layout Container -->
+    <div id="app-container" class="flex flex-1 overflow-hidden">
+
+        <!-- Sidebar -->
+        <aside id="sidebar"
+            class="fixed lg:relative z-50 h-full bg-background flex flex-col overflow-hidden transition-all duration-300 ease-in-out -translate-x-full lg:translate-x-0 w-60 lg:w-0"
+            data-expanded="false">
+
+            <!-- Sidebar Content -->
+            <nav class="flex-1 p-1 space-y-1 overflow-y-auto overflow-x-hidden w-60">
+                <!-- Section Header -->
+                <div class="px-2 py-2">
+                    <span class="text-sm font-medium text-sidebar-foreground whitespace-nowrap">History</span>
+                </div>
+
+                <!-- Navigation Items -->
+                {% if history_jobs %}
+                    {% for job in history_jobs %}
+                    <div class="group relative flex items-center rounded-md hover:bg-sidebar-accent pr-2">
+                        <a href="{{ url_for('result', taskID=job.id) }}"
+                            class="flex-1 block px-2 py-2 text-sm text-muted-foreground hover:text-sidebar-foreground whitespace-nowrap overflow-hidden text-ellipsis
+                            {% if current_taskID == job.id %}bg-sidebar-accent text-sidebar-foreground font-medium{% endif %}">
+                            {{ job.name or job.filename or 'Untitled' }}
+                        </a>
+                        
+                        <!-- 3-dot Menu Trigger -->
+                        <button onclick="toggleMenu(event, '{{ job.id }}')" class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-700/50 text-muted-foreground transition-opacity">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div id="menu-{{ job.id }}" class="hidden absolute right-0 top-8 w-32 bg-popover border border-border rounded shadow-lg z-50 flex-col py-1">
+                            <button onclick="startRename('{{ job.id }}', '{{ job.name }}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-accent hover:text-accent-foreground">Rename</button>
+                            <button onclick="deleteJob('{{ job.id }}')" class="w-full text-left px-3 py-1.5 text-xs text-red-500 hover:bg-red-500/10 hover:text-red-400">Delete</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="px-2 py-2 text-xs text-muted-foreground italic">No history yet</div>
+                {% endif %}
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col min-w-0 overflow-auto">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="{{url_for('static', filename='script/sidebar.js')}}"></script>
+    <script>
+        $(document).ready(function () {
+            $('#loading').hide();
+        });
+
+        function loading() {
+            $("header#content-header").hide();
+            $("main#content").hide();
+            $("footer#content").hide();
+            $("#loading").show();
+            $("#loading img").attr("src", "{{ url_for('static', filename='img/cow.gif') }}");
+            $("#loading p").text("Uploading files...");
+            $("#loading span").html("The process may take a moment, please<br>keep this window open.");
+        };
+
+        // Sidebar Menu Logic
+        function toggleMenu(event, id) {
+             event.preventDefault();
+             event.stopPropagation();
+             // Close all other menus
+             document.querySelectorAll('[id^="menu-"]').forEach(el => {
+                 if (el.id !== `menu-${id}`) el.classList.add('hidden');
+             });
+             
+             const menu = document.getElementById(`menu-${id}`);
+             menu.classList.toggle('hidden');
+        }
+
+        // Close menus on clicking outside
+        document.addEventListener('click', () => {
+             document.querySelectorAll('[id^="menu-"]').forEach(el => el.classList.add('hidden'));
+        });
+
+        function startRename(id, currentName) {
+            const newName = prompt("Enter new name:", currentName);
+            if (newName && newName !== currentName) {
+                fetch(`/api/history/${id}/rename`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({name: newName})
+                }).then(() => location.reload());
+            }
+        }
+
+        function deleteJob(id) {
+            if (confirm("Are you sure you want to delete this result?")) {
+                 fetch(`/api/history/${id}`, {
+                    method: 'DELETE'
+                }).then(() => {
+                    // If we are on the page of the deleted job, go to main
+                    if (window.location.href.includes(id)) {
+                        window.location.href = "{{ url_for('main') }}";
+                    } else {
+                        location.reload();
+                    }
+                });
+            }
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

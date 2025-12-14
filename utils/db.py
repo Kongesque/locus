@@ -14,6 +14,7 @@ def init_db():
     conn.execute('''
         CREATE TABLE IF NOT EXISTS jobs (
             id TEXT PRIMARY KEY,
+            name TEXT,
             filename TEXT,
             video_path TEXT,
             frame_path TEXT,
@@ -24,14 +25,23 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
+    # Simple migration for existing databases
+    try:
+        conn.execute('ALTER TABLE jobs ADD COLUMN name TEXT')
+    except sqlite3.OperationalError:
+        # Column likely already exists
+        pass
+        
     conn.commit()
     conn.close()
 
 def create_job(task_id, filename, video_path):
     conn = get_db()
+    # Default name to filename
     conn.execute(
-        'INSERT INTO jobs (id, filename, video_path, points, color) VALUES (?, ?, ?, ?, ?)',
-        (task_id, filename, video_path, '[]', '[5, 189, 251]')
+        'INSERT INTO jobs (id, name, filename, video_path, points, color) VALUES (?, ?, ?, ?, ?, ?)',
+        (task_id, filename, filename, video_path, '[]', '[5, 189, 251]')
     )
     conn.commit()
     conn.close()
@@ -55,6 +65,18 @@ def get_job(task_id):
              
         return job_dict
     return None
+
+def get_all_jobs():
+    conn = get_db()
+    jobs = conn.execute('SELECT * FROM jobs ORDER BY created_at DESC').fetchall()
+    conn.close()
+    return [dict(job) for job in jobs]
+
+def delete_job(task_id):
+    conn = get_db()
+    conn.execute('DELETE FROM jobs WHERE id = ?', (task_id,))
+    conn.commit()
+    conn.close()
 
 def update_job(task_id, **kwargs):
     conn = get_db()

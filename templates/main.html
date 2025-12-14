@@ -1,146 +1,54 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base.html' %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZoneNet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
-    <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
-</head>
+{% block content %}
+<!-- Main Content -->
+<main id="content"
+    class="relative flex-1 flex items-center justify-center flex-col text-center mx-2 mt-1 mb-2 overflow-hidden bg-primary-color border border-primary-border rounded-md">
 
-<body class="bg-background text-sidebar-foreground h-screen overflow-hidden flex flex-col">
+    <!-- Sidebar Toggle -->
+    <button onclick="toggleSidebar()"
+        class="absolute top-4 left-4 p-1 rounded-md hover:bg-sidebar-accent transition-colors">
+        <img src="{{ url_for('static', filename='img/sidebar.svg') }}" class="w-4.5 h-4.5 invert opacity-80">
+    </button>
 
-    <div id="loading" class="loading-overlay">
-        <img src="">
-        <p></p>
-        <span></span>
+    <div class="mb-4">
+        <h1 class="text-3xl md:text-5xl font-bold text-sidebar-foreground tracking-tight leading-tight">
+            What do you want to count?
+        </h1>
     </div>
 
-    <!-- Mobile Backdrop -->
-    <div id="backdrop" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 hidden lg:hidden"
-        onclick="toggleSidebar()"></div>
+    <div class="flex items-center justify-center px-4">
 
-    <!-- Header (outside app-container so sidebar doesn't push it) -->
-    <header id="content" class="flex justify-between items-center py-2 px-3">
-        <a href="{{ url_for('main') }}" class="no-underline">
-            <div class="text-lg font-semibold text-text-color tracking-tight">ZoneNet</div>
-        </a>
-        <div class="flex items-center gap-2">
-            <a href="mailto:kongesque@gmail.com" class="btn-secondary no-underline">Feedback</a>
-            <a href="https://github.com/Kongesque" target="_blank"
-                class="w-6 h-6 flex items-center justify-center rounded-full">
-                <img src="{{ url_for('static', filename='img/github.svg') }}" class="w-6 h-6 invert opacity-80">
-            </a>
-        </div>
-    </header>
+        <form id="uploadForm" method='POST' enctype="multipart/form-data" hidden>
+            {{ form.hidden_tag() }}
+            <div class="custom-file">
+                {{ form.file(class_="custom-file-input", id="fileInput", accept="video/*") }}
+                <label class="custom-file-label" for="customFile">New Upload file</label>
+            </div>
+            <input id="dummy" type="submit" name="anything_submit" value="Submit" onclick="loading();" hidden>
+        </form>
 
-    <!-- Main Layout Container -->
-    <div id="app-container" class="flex flex-1 overflow-hidden">
-
-        <!-- Sidebar -->
-        <aside id="sidebar"
-            class="fixed lg:relative z-50 h-full bg-background flex flex-col overflow-hidden transition-all duration-300 ease-in-out -translate-x-full lg:translate-x-0 w-60 lg:w-0"
-            data-expanded="false">
-
-            <!-- Sidebar Content -->
-            <nav class="flex-1 p-1 space-y-1 overflow-y-auto overflow-x-hidden w-60">
-                <!-- Section Header -->
-                <div class="px-2 py-2">
-                    <span class="text-sm font-medium text-sidebar-foreground whitespace-nowrap">History</span>
+        <label for="input-file" id="drop-area"
+            class="w-full max-w-[420px] p-8 md:p-10 text-center rounded-xl cursor-pointer transition-all duration-200 border border-dashed border-muted-foreground hover:border-sidebar-foreground hover:bg-sidebar-accent">
+            <div id="file-view" class="flex flex-col items-center gap-4 md:gap-6">
+                <div class="flex items-center gap-3">
+                    <img src="{{ url_for('static', filename='img/upload.svg') }}" class="w-6 h-6 invert opacity-60">
+                    <span class="text-sidebar-foreground font-medium">Choose Files</span>
                 </div>
-
-                <!-- Navigation Items -->
-                <a href="#"
-                    class="block px-2 py-2 text-sm text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-md whitespace-nowrap overflow-hidden text-ellipsis">
-                    Video 1
-                </a>
-                <a href="#"
-                    class="block px-2 py-2 text-sm text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-md whitespace-nowrap overflow-hidden text-ellipsis">
-                    Video 2
-                </a>
-                <a href="#"
-                    class="block px-2 py-2 text-sm text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-md whitespace-nowrap overflow-hidden text-ellipsis">
-                    Video 3
-                </a>
-            </nav>
-        </aside>
-
-        <!-- Main Content Area -->
-        <div class="flex-1 flex flex-col min-w-0 overflow-auto">
-
-
-            <!-- Main Content -->
-            <main id="content"
-                class="relative flex-1 flex items-center justify-center flex-col text-center mx-2 mt-1 mb-2 overflow-hidden bg-primary-color border border-primary-border rounded-md">
-
-                <!-- Sidebar Toggle -->
-                <button onclick="toggleSidebar()"
-                    class="absolute top-4 left-4 p-1 rounded-md hover:bg-sidebar-accent transition-colors">
-                    <img src="{{ url_for('static', filename='img/sidebar.svg') }}"
-                        class="w-4.5 h-4.5 invert opacity-80">
-                </button>
-
-                <div class="mb-4">
-                    <h1 class="text-3xl md:text-5xl font-bold text-sidebar-foreground tracking-tight leading-tight">
-                        What do you want to count?
-                    </h1>
+                <p class="text-sm text-muted-foreground">or drop it here</p>
+                <div class="flex items-center gap-3">
+                    <span
+                        class="px-3 py-1 text-xs text-muted-foreground border border-muted-foreground rounded-full">.MP4</span>
+                    <span
+                        class="px-3 py-1 text-xs text-muted-foreground border border-muted-foreground rounded-full">.WebM</span>
                 </div>
+            </div>
+        </label>
 
-                <div class="flex items-center justify-center px-4">
-
-                    <form id="uploadForm" method='POST' enctype="multipart/form-data" hidden>
-                        {{ form.hidden_tag() }}
-                        <div class="custom-file">
-                            {{ form.file(class_="custom-file-input", id="fileInput", accept="video/*") }}
-                            <label class="custom-file-label" for="customFile">New Upload file</label>
-                        </div>
-                        <input id="dummy" type="submit" name="anything_submit" value="Submit" onclick="loading();"
-                            hidden>
-                    </form>
-
-                    <label for="input-file" id="drop-area"
-                        class="w-full max-w-[420px] p-8 md:p-10 text-center rounded-xl cursor-pointer transition-all duration-200 border border-dashed border-muted-foreground hover:border-sidebar-foreground hover:bg-sidebar-accent">
-                        <div id="file-view" class="flex flex-col items-center gap-4 md:gap-6">
-                            <div class="flex items-center gap-3">
-                                <img src="{{ url_for('static', filename='img/upload.svg') }}"
-                                    class="w-6 h-6 invert opacity-60">
-                                <span class="text-sidebar-foreground font-medium">Choose Files</span>
-                            </div>
-                            <p class="text-sm text-muted-foreground">or drop it here</p>
-                            <div class="flex items-center gap-3">
-                                <span
-                                    class="px-3 py-1 text-xs text-muted-foreground border border-muted-foreground rounded-full">.MP4</span>
-                                <span
-                                    class="px-3 py-1 text-xs text-muted-foreground border border-muted-foreground rounded-full">.WebM</span>
-                            </div>
-                        </div>
-                    </label>
-
-                </div>
-            </main>
-        </div>
     </div>
+</main>
+{% endblock %}
 
-    <script src="{{url_for('static', filename='script/main.js')}}"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="{{url_for('static', filename='script/sidebar.js')}}"></script>
-    <script>
-
-        $(document).ready(function () {
-            $('#loading').hide();
-        });
-
-        function loading() {
-            $("header#content").hide();
-            $("main#content").hide();
-            $("footer#content").hide();
-            $("#loading").show();
-            $("#loading img").attr("src", "{{ url_for('static', filename='img/cow.gif') }}");
-            $("#loading p").text("Uploading files...");
-            $("#loading span").html("The process may take a moment, please<br>keep this window open.");
-        };
-    </script>
-</body>
-
-</html>
+{% block scripts %}
+<script src="{{url_for('static', filename='script/main.js')}}"></script>
+{% endblock %}
