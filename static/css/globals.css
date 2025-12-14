@@ -42,6 +42,11 @@
     --color-muted-foreground: #A1A1A1;
     --color-background: #000000;
 
+    /* Dropzone specific tokens */
+    --color-dropzone-border: #1F1F1F;
+    --color-dropzone-accent: #1F6F65;
+    --color-dropzone-hover-bg: #121212;
+
     --font-family-sans: 'Geist Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 

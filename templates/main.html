@@ -29,11 +29,22 @@
         </form>
 
         <label for="input-file" id="drop-area"
-            class="w-full max-w-[420px] p-8 md:p-10 text-center rounded-xl cursor-pointer transition-all duration-200 border border-dashed border-muted-foreground hover:border-sidebar-foreground hover:bg-sidebar-accent">
-            <div id="file-view" class="flex flex-col items-center gap-4 md:gap-6">
-                <div class="flex items-center gap-3">
-                    <img src="{{ url_for('static', filename='img/upload.svg') }}" class="w-6 h-6 invert opacity-60">
-                    <span class="text-sidebar-foreground font-medium">Choose Files</span>
+            class="w-full max-w-6xl py-6 px-64 text-center rounded-xl cursor-pointer transition-all duration-200 bg-dropzone-hover-bg border-[2px] border-dashed border-dropzone-border hover:border-dropzone-accent group">
+            <div id="file-view" class="flex flex-col items-center gap-4 md:gap-5">
+                <!-- Icon with accent color, Text with text-color -->
+                <div class="flex items-center gap-3 transition-colors">
+                    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"
+                        class="w-8 h-8 text-dropzone-accent">
+                        <path fill-rule="evenodd" clip-rule="evenodd"
+                            d="M14.0295 17.4371L14.0295 9.06538L16.0295 9.06538L16.0295 17.4371L14.0295 17.4371Z"
+                            fill="currentColor" />
+                        <path fill-rule="evenodd" clip-rule="evenodd"
+                            d="M15.0549 6.5858L19.2071 10.738L17.7929 12.1522L15.0549 9.41423L12.317 12.1522L10.9028 10.738L15.0549 6.5858Z"
+                            fill="currentColor" />
+                        <path fill-rule="evenodd" clip-rule="evenodd"
+                            d="M7 15.4373H9V20.4373H21V15.4373H23V22.4373H7L7 15.4373Z" fill="currentColor" />
+                    </svg>
+                    <span class="font-bold text-xl text-text-color">Choose Files</span>
                 </div>
                 <p class="text-sm text-muted-foreground">or drop it here</p>
                 <div class="flex items-center gap-3">
