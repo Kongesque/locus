@@ -26,8 +26,11 @@ class UploadFileForm(FlaskForm):
 @app.context_processor
 def inject_history():
     jobs = get_all_jobs()
-    # If there's an active taskID in session, pass it to highlight current job
-    return dict(history_jobs=jobs, current_taskID=session.get('taskID'))
+    active_taskID = None
+    # Only highlight active task on result or draw pages
+    if request.endpoint in ['result', 'draw']:
+        active_taskID = session.get('taskID')
+    return dict(history_jobs=jobs, current_taskID=active_taskID)
 
 # Routes
 @app.route('/media/<path:filename>')

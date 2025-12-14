@@ -36,6 +36,9 @@
     --color-sidebar-foreground: #EDEDED;
     --color-sidebar-accent: #1A1A1A;
     --color-sidebar-accent-foreground: #FFFFFF;
+    --color-sidebar-item-hover: #252525;
+    --color-sidebar-menu-hover: #454545;
+    --color-delete-text: #DA3136;
     --color-muted-foreground: #A1A1A1;
     --color-background: #000000;
 

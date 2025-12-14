@@ -24,7 +24,7 @@
         onclick="toggleSidebar()"></div>
 
     <!-- Header -->
-    <header id="content-header" class="flex justify-between items-center py-2 px-3">
+    <header id="content-header" class="flex justify-between items-center py-2.5 px-3">
         <a href="{{ url_for('main') }}" class="no-underline">
             <div class="text-lg font-semibold text-text-color tracking-tight">ZoneNet</div>
         </a>
@@ -48,7 +48,7 @@
             data-expanded="false">
 
             <!-- Sidebar Content -->
-            <nav class="flex-1 p-1 space-y-1 overflow-y-auto overflow-x-hidden w-60">
+            <nav class="flex-1 p-2 space-y-1 overflow-y-auto overflow-x-hidden w-60">
                 <!-- Section Header -->
                 <div class="px-2 py-2">
                     <span class="text-sm font-medium text-sidebar-foreground whitespace-nowrap">History</span>
@@ -56,28 +56,29 @@
 
                 <!-- Navigation Items -->
                 {% if history_jobs %}
-                    {% for job in history_jobs %}
-                    <div class="group relative flex items-center rounded-md hover:bg-sidebar-accent pr-2">
-                        <a href="{{ url_for('result', taskID=job.id) }}"
-                            class="flex-1 block px-2 py-2 text-sm text-muted-foreground hover:text-sidebar-foreground whitespace-nowrap overflow-hidden text-ellipsis
-                            {% if current_taskID == job.id %}bg-sidebar-accent text-sidebar-foreground font-medium{% endif %}">
-                            {{ job.name or job.filename or 'Untitled' }}
-                        </a>
-                        
-                        <!-- 3-dot Menu Trigger -->
-                        <button onclick="toggleMenu(event, '{{ job.id }}')" class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-700/50 text-muted-foreground transition-opacity">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
-                        </button>
+                {% for job in history_jobs %}
+                <div class="group relative flex items-center rounded-md hover:bg-sidebar-item-hover pr-2
+                    {% if current_taskID == job.id %}bg-sidebar-accent text-sidebar-foreground{% endif %}">
+                    <a href="{{ url_for('result', taskID=job.id) }}" id="title-{{ job.id }}"
+                        class="flex-1 block px-2 py-2 text-sm whitespace-nowrap overflow-hidden text-ellipsis
+                            {% if current_taskID == job.id %}font-medium{% else %}text-muted-foreground hover:text-sidebar-foreground{% endif %}">
+                        {{ job.name or job.filename or 'Untitled' }}
+                    </a>
 
-                        <!-- Dropdown Menu -->
-                        <div id="menu-{{ job.id }}" class="hidden absolute right-0 top-8 w-32 bg-popover border border-border rounded shadow-lg z-50 flex-col py-1">
-                            <button onclick="startRename('{{ job.id }}', '{{ job.name }}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-accent hover:text-accent-foreground">Rename</button>
-                            <button onclick="deleteJob('{{ job.id }}')" class="w-full text-left px-3 py-1.5 text-xs text-red-500 hover:bg-red-500/10 hover:text-red-400">Delete</button>
-                        </div>
-                    </div>
-                    {% endfor %}
+                    <!-- 3-dot Menu Trigger -->
+                    <button id="menu-btn-{{ job.id }}" onclick="toggleMenu(event, '{{ job.id }}')"
+                        class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-sidebar-menu-hover text-muted-foreground transition-opacity">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="12" cy="5" r="1"></circle>
+                            <circle cx="12" cy="19" r="1"></circle>
+                        </svg>
+                    </button>
+                </div>
+                {% endfor %}
                 {% else %}
-                    <div class="px-2 py-2 text-xs text-muted-foreground italic">No history yet</div>
+                <div class="px-2 py-2 text-xs text-muted-foreground italic">No history yet</div>
                 {% endif %}
             </nav>
         </aside>
@@ -86,6 +87,15 @@
         <div class="flex-1 flex flex-col min-w-0 overflow-auto">
             {% block content %}{% endblock %}
         </div>
+    </div>
+
+    <!-- Global Sidebar Menu -->
+    <div id="global-menu"
+        class="hidden fixed z-[9999] w-32 bg-btn-bg border border-btn-border rounded shadow-lg flex-col py-1">
+        <button id="menu-rename-btn"
+            class="w-full text-left px-3 py-1.5 text-xs text-text-color hover:bg-btn-hover">Rename</button>
+        <button id="menu-delete-btn"
+            class="w-full text-left px-3 py-1.5 text-xs text-delete-text hover:bg-delete-text/10">Delete</button>
     </div>
 
     <!-- Scripts -->
@@ -106,48 +116,179 @@
             $("#loading span").html("The process may take a moment, please<br>keep this window open.");
         };
 
-        // Sidebar Menu Logic
+        // Sidebar Menu Logic (Global)
+        let activeMenuId = null;
+
         function toggleMenu(event, id) {
-             event.preventDefault();
-             event.stopPropagation();
-             // Close all other menus
-             document.querySelectorAll('[id^="menu-"]').forEach(el => {
-                 if (el.id !== `menu-${id}`) el.classList.add('hidden');
-             });
-             
-             const menu = document.getElementById(`menu-${id}`);
-             menu.classList.toggle('hidden');
+            event.preventDefault();
+            event.stopPropagation();
+
+            const menu = document.getElementById('global-menu');
+            const btn = event.currentTarget;
+            const rect = btn.getBoundingClientRect();
+
+            // If clicking the same button to close
+            if (activeMenuId === id && !menu.classList.contains('hidden')) {
+                closeMenu();
+                return;
+            }
+
+            // If another menu was open, close it first
+            if (activeMenuId && activeMenuId !== id) {
+                closeMenu();
+            }
+
+            // Position: Right of button, aligned top, with more gap (12px)
+            menu.style.top = `${rect.top}px`;
+            menu.style.left = `${rect.right + 8}px`;
+
+            // Wire up buttons
+            document.getElementById('menu-rename-btn').onclick = () => startRename(id);
+            document.getElementById('menu-delete-btn').onclick = () => deleteJob(id);
+
+            // Show menu
+            menu.classList.remove('hidden');
+            menu.classList.add('flex');
+
+            // Set active state on button AND parent row
+            btn.classList.add('bg-sidebar-menu-hover', 'opacity-100');
+            const row = btn.closest('.group');
+            if (row) row.classList.add('bg-sidebar-item-hover');
+
+            activeMenuId = id;
+        }
+
+        function closeMenu() {
+            const menu = document.getElementById('global-menu');
+            menu.classList.add('hidden');
+            menu.classList.remove('flex');
+
+            if (activeMenuId) {
+                const btn = document.getElementById(`menu-btn-${activeMenuId}`);
+                if (btn) {
+                    btn.classList.remove('bg-sidebar-menu-hover', 'opacity-100');
+                    // Remove active state from parent row
+                    const row = btn.closest('.group');
+                    if (row) row.classList.remove('bg-sidebar-item-hover');
+                }
+                activeMenuId = null;
+            }
         }
 
         // Close menus on clicking outside
-        document.addEventListener('click', () => {
-             document.querySelectorAll('[id^="menu-"]').forEach(el => el.classList.add('hidden'));
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('global-menu');
+            // If click is not inside the menu and menu is visible
+            if (menu && !menu.contains(e.target) && !menu.classList.contains('hidden')) {
+                // Also check if click is on the current active button (handled by toggleMenu)
+                if (activeMenuId) {
+                    const btn = document.getElementById(`menu-btn-${activeMenuId}`);
+                    // If clicking the button itself, let toggleMenu handle it to avoid double-toggle
+                    if (btn && btn.contains(e.target)) return;
+                }
+                closeMenu();
+            }
         });
 
         function startRename(id, currentName) {
-            const newName = prompt("Enter new name:", currentName);
-            if (newName && newName !== currentName) {
+            const titleEl = document.getElementById(`title-${id}`);
+            if (!titleEl) return;
+
+            // Close the global menu
+            closeMenu();
+
+            // Create Input
+            const input = document.createElement('input');
+            input.type = 'text';
+            // Use current text content if name is missing/default
+            input.value = (currentName && currentName !== 'None' && currentName !== 'Untitled') ? currentName : titleEl.innerText.trim();
+
+            // Styled to blend in: transparent bg, bottom border only
+            input.className = "flex-1 block px-2 py-1 text-sm text-sidebar-foreground border-b border-gray-600 outline-none w-full placeholder-gray-500 focus:border-blue-500 transition-colors appearance-none bg-transparent";
+
+            // Force styles with !important to override any user agent or tailwind weirdness
+            input.style.setProperty('background', 'transparent', 'important');
+            input.style.setProperty('background-color', 'transparent', 'important');
+            input.style.setProperty('background-image', 'none', 'important');
+            input.style.setProperty('box-shadow', 'none', 'important');
+            input.style.color = "inherit";
+
+            // Hide title, show input
+            titleEl.classList.add('hidden');
+            titleEl.parentNode.insertBefore(input, titleEl);
+            input.focus();
+
+            // Event Handlers
+            input.addEventListener('blur', () => saveRename(id, input.value, titleEl, input));
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    input.blur();
+                } else if (e.key === 'Escape') {
+                    cancelRename(titleEl, input);
+                }
+            });
+        }
+
+        function saveRename(id, newName, titleEl, input) {
+            // Prevent multiple calls (blur + enter)
+            if (!document.body.contains(input)) return;
+
+            const finalName = newName.trim();
+            if (finalName && finalName !== titleEl.innerText.trim()) {
                 fetch(`/api/history/${id}/rename`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({name: newName})
-                }).then(() => location.reload());
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: finalName })
+                }).then(response => {
+                    if (response.ok) {
+                        // Update UI without reload
+                        titleEl.textContent = finalName;
+                        cancelRename(titleEl, input);
+                        // No need to update onclicks since toggleMenu does it dynamically
+                    } else {
+                        cancelRename(titleEl, input);
+                        // Optional: show error
+                    }
+                }).catch(() => {
+                    cancelRename(titleEl, input);
+                });
+            } else {
+                cancelRename(titleEl, input);
             }
         }
 
+        function cancelRename(titleEl, input) {
+            if (input.parentNode) input.remove();
+            titleEl.classList.remove('hidden');
+        }
+
         function deleteJob(id) {
-            if (confirm("Are you sure you want to delete this result?")) {
-                 fetch(`/api/history/${id}`, {
-                    method: 'DELETE'
-                }).then(() => {
-                    // If we are on the page of the deleted job, go to main
-                    if (window.location.href.includes(id)) {
-                        window.location.href = "{{ url_for('main') }}";
-                    } else {
-                        location.reload();
+            // Immediate delete, no confirmation
+            fetch(`/api/history/${id}`, {
+                method: 'DELETE'
+            }).then(() => {
+                // If we are on the page of the deleted job, go to main
+                if (window.location.href.includes(id)) {
+                    window.location.href = "{{ url_for('main') }}";
+                } else {
+                    // Update UI without reload: Remove the item row
+                    const titleEl = document.getElementById(`title-${id}`);
+                    if (titleEl) {
+                        const group = titleEl.closest('.group');
+                        if (group) group.remove();
+
+                        // Check if list is empty and show "No history" msg if needed
+                        const container = document.querySelector('nav');
+                        // We check if there are any other .group elements
+                        if (!container.querySelector('.group')) {
+                            // Append the "no history" div if not present
+                            if (!container.innerText.includes("No history yet")) {
+                                container.insertAdjacentHTML('beforeend', '<div class="px-2 py-2 text-xs text-muted-foreground italic">No history yet</div>');
+                            }
+                        }
                     }
-                });
-            }
+                }
+            });
         }
     </script>
     {% block scripts %}{% endblock %}
