@@ -12,12 +12,10 @@ uploadFile.addEventListener('change', function () {
 
 dropArea.addEventListener("dragover", function (e) {
     e.preventDefault();
-    console.log('Drag over event triggered');
 });
 
 dropArea.addEventListener("drop", function (e) {
     e.preventDefault();
-    console.log('Drop event triggered');
     uploadFile.files = e.dataTransfer.files;
     uploadForm.submit();
 });

@@ -100,7 +100,6 @@ def submit():
         pass
     end_time = time.time()
     process_time = round(end_time - start_time, 2)
-    process_time = round(end_time - start_time, 2)
     update_job(taskID, process_time=process_time, status='completed')
         
     # Cleanup source files
