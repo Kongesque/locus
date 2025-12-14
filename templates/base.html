@@ -29,11 +29,11 @@
         <div class="flex items-center gap-2">
             {% block header_actions %}
             <a href="mailto:kongesque@gmail.com" class="btn-secondary no-underline">Feedback</a>
-            {% endblock %}
             <a href="https://github.com/Kongesque" target="_blank"
                 class="w-6 h-6 flex items-center justify-center rounded-full">
                 <img src="{{ url_for('static', filename='img/github.svg') }}" class="w-6 h-6 invert opacity-80">
             </a>
+            {% endblock %}
         </div>
     </header>
 

@@ -4,12 +4,12 @@
 {% endblock %}
 
 {% block content %}
-<main id="content" class="relative flex-1 flex items-center justify-center p-4 md:p-6 overflow-hidden">
+<main id="content" class="relative flex-1 flex items-center justify-center overflow-hidden">
 
 
 
     <div class="flex w-full h-full">
-        <video class="rounded-xl w-full object-contain bg-btn-hover" controls>
+        <video class="w-full h-full object-contain" controls>
             <source src="{{ url_for('media_file', filename='outputs/' + 'output_' + taskID + '.mp4') }}"
                 type="video/mp4">
         </video>
@@ -29,20 +29,7 @@
         </p>
     </div>
     <div class="flex items-center gap-3">
-        <form id="uploadForm" method='POST' enctype="multipart/form-data" hidden>
-            {{ form.hidden_tag() }}
-            <div class="custom-file">
-                {{ form.file(class_="custom-file-input", id="fileInput", accept="video/*") }}
-                <label class="custom-file-label" for="customFile">New Upload file</label>
-            </div>
-            <input id="dummy" type="submit" name="anything_submit" value="Submit" onclick="loading();" hidden>
-        </form>
-
-        <span class="text-sm text-gray-300">New upload</span>
-        <button
-            class="upload w-10 h-10 flex items-center justify-center bg-white rounded-lg hover:bg-gray-200 transition-all">
-            <img src="{{ url_for('static', filename='img/upload.svg') }}" class="w-5 h-5">
-        </button>
+        <!-- Upload button removed -->
     </div>
 </footer>
 {% endblock %}
