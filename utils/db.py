@@ -1,7 +1,7 @@
 import sqlite3
 import json
 
-DB_PATH = 'tasks.db'
+DB_PATH = 'instance/tasks.db'
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)

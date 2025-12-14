@@ -26,7 +26,7 @@ def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf
     BASE_FONT_THICKNESS = 3
     font_thickness = max(width, height) // 1000 * BASE_FONT_THICKNESS
 
-    model = YOLO('yolo11n.pt')
+    model = YOLO('weights/yolo11n.pt')
 
     cap = cv2.VideoCapture(SOURCE_VIDEO)
 

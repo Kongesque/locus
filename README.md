@@ -78,4 +78,4 @@ ZoneNet maps the standard **COCO 80 classes**. You can select these directly fro
 - **Higher (>60%)**: Only counts objects the model is extremely sure about.
 
 ### Database
-Jobs are stored in `tasks.db` (SQLite). The database schema is automatically migrated on app startup.
+Jobs are stored in `instance/tasks.db` (SQLite). The database schema is automatically migrated on app startup.
