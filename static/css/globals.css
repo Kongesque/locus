@@ -107,4 +107,15 @@
     .option.selected {
         @apply opacity-100 ring-2 ring-text-color ring-offset-2 ring-offset-btn-hover;
     }
+
+    .mask-icon {
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-image: var(--mask-url);
+        mask-image: var(--mask-url);
+    }
 }
