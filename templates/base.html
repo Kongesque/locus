@@ -14,7 +14,7 @@
 
     <!-- Loading Overlay -->
     <div id="loading" class="loading-overlay">
-        <img src="">
+
         <p></p>
         <span></span>
     </div>
@@ -24,7 +24,7 @@
     <!-- Header -->
     <header id="content-header" class="flex justify-between items-center py-2.5 px-3">
         <a href="{{ url_for('main') }}" class="no-underline">
-            <div class="text-lg font-semibold text-text-color tracking-tight">ZoneNet</div>
+            <div class="text-lg font-semibold text-text-color tracking-tight font-mono">ZoneNet</div>
         </a>
         <div class="flex items-center gap-2">
             {% block header_actions %}
@@ -70,7 +70,7 @@
             $("main#content").hide();
             $("footer#content").hide();
             $("#loading").show();
-            $("#loading img").attr("src", "{{ url_for('static', filename='img/cow.gif') }}");
+
             $("#loading p").text("Uploading files...");
             $("#loading span").html("The process may take a moment, please<br>keep this window open.");
         };

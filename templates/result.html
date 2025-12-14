@@ -8,8 +8,8 @@
 
 
 
-    <div class="flex w-full h-full">
-        <video class="w-full h-full object-contain" controls>
+    <div class="w-full h-full flex items-center justify-center p-4">
+        <video class="max-w-full max-h-full object-contain rounded-xl" controls>
             <source src="{{ url_for('media_file', filename='outputs/' + 'output_' + taskID + '.mp4') }}"
                 type="video/mp4">
         </video>
@@ -26,6 +26,10 @@
         <p class="size-height">
             <span>Height: </span>
             <span class="value text-text-color"> {{ height }} px</span>
+        </p>
+        <p class="process-time">
+            <span>Process Time: </span>
+            <span class="value text-text-color"> {{ process_time }} s</span>
         </p>
     </div>
     <div class="flex items-center gap-3">

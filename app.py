@@ -3,6 +3,7 @@ from flask_wtf import FlaskForm
 from wtforms import FileField, SubmitField
 from wtforms.validators import InputRequired
 import os
+import time
 from core.detector import detection
 from utils.file_handler import handle_upload
 from utils.db import init_db, get_job, update_job, get_all_jobs, delete_job
@@ -73,8 +74,12 @@ def submit():
     # Note: detection is a generator, so we need to iterate to execute it
     # We can probably optimize this or run it in background in a real app
     # For now, we just consume the generator
+    start_time = time.time()
     for _ in detection(job['video_path'], job['points'], (job['frame_width'], job['frame_height']), job['color'], taskID):
         pass
+    end_time = time.time()
+    process_time = round(end_time - start_time, 2)
+    update_job(taskID, process_time=process_time)
         
     # Cleanup source files
     if job.get('video_path') and os.path.exists(job['video_path']):
@@ -119,8 +124,9 @@ def result():
         
     width = job.get('frame_width')
     height = job.get('frame_height')
+    process_time = job.get('process_time', 0)
     
-    return render_template('result.html', form=form, taskID=taskID, width=width, height=height)
+    return render_template('result.html', form=form, taskID=taskID, width=width, height=height, process_time=process_time)
 
 @app.route('/get_coordinates', methods=['POST'])
 def get_coordinates():

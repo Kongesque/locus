@@ -18,7 +18,7 @@
             <div class="text-lg font-semibold text-text-color tracking-tight">ZoneNet</div>
         </a>
         <div class="flex items-center gap-2">
-            <button class="btn-secondary">How to use</button>
+
 
         </div>
     </header>
@@ -110,7 +110,7 @@
     <!-- Loading Screen -->
     <div id="loading"
         class="hidden fixed inset-0 z-50 bg-bg-color flex flex-col items-center justify-center h-screen w-screen">
-        <img src="" alt="Processing" class="w-32 h-32 mb-4 object-contain">
+
         <p class="text-xl font-semibold text-text-color mb-2 text-center"></p>
         <span class="text-sm text-gray-400 text-center leading-relaxed mb-6"></span>
 
@@ -136,7 +136,7 @@
             $("main#content").hide();
             $("footer#content").hide();
             $("#loading").removeClass("hidden").css("display", "flex");
-            $("#loading img").attr("src", "{{ url_for('static', filename='img/cow.gif') }}");
+
             $("#loading p").text("Processing files...");
             $("#loading span").html("The process may take a moment, please<br>keep this window open.");
 

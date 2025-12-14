@@ -21,6 +21,7 @@ def init_db():
             frame_height INTEGER,
             points TEXT, 
             color TEXT,
+            process_time REAL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -28,6 +29,12 @@ def init_db():
     # Simple migration for existing databases
     try:
         conn.execute('ALTER TABLE jobs ADD COLUMN name TEXT')
+    except sqlite3.OperationalError:
+        # Column likely already exists
+        pass
+
+    try:
+        conn.execute('ALTER TABLE jobs ADD COLUMN process_time REAL')
     except sqlite3.OperationalError:
         # Column likely already exists
         pass
