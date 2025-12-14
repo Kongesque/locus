@@ -226,6 +226,7 @@
             fetch(`/api/history/${id}`, {
                 method: 'DELETE'
             }).then(() => {
+                closeMenu(); // Close the dropdown menu
                 // If we are on the page of the deleted job, go to main
                 if (window.location.href.includes(id)) {
                     window.location.href = "{{ url_for('main') }}";

@@ -45,12 +45,15 @@ colorBtns.forEach(btn => {
     btn.addEventListener("click", () => {
         document.querySelector(".options .selected").classList.remove("selected");
         btn.classList.add("selected");
-        selectedColor = window.getComputedStyle(btn).getPropertyValue("background-color");
-        let rgbValues = selectedColor.match(/\d+/g); // Extract RGB values as an array
+        
+        const colorStr = btn.dataset.color; // "R,G,B"
+        const [r, g, b] = colorStr.split(',').map(Number);
+        selectedColor = `rgb(${r}, ${g}, ${b})`;
+        
         let colorData = {
-            "b": rgbValues[2],
-            "g": rgbValues[1],
-            "r": rgbValues[0]
+            "b": b,
+            "g": g,
+            "r": r
         };
         $.ajax({
             type: "POST",

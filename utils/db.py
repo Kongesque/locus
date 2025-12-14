@@ -38,16 +38,22 @@ def init_db():
     except sqlite3.OperationalError:
         # Column likely already exists
         pass
+
+    try:
+        conn.execute('ALTER TABLE jobs ADD COLUMN status TEXT DEFAULT "pending"')
+    except sqlite3.OperationalError:
+        # Column likely already exists
+        pass
         
     conn.commit()
     conn.close()
 
 def create_job(task_id, filename, video_path):
     conn = get_db()
-    # Default name to filename
+    # Default name to filename, status to pending
     conn.execute(
-        'INSERT INTO jobs (id, name, filename, video_path, points, color) VALUES (?, ?, ?, ?, ?, ?)',
-        (task_id, filename, filename, video_path, '[]', '[5, 189, 251]')
+        'INSERT INTO jobs (id, name, filename, video_path, points, color, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        (task_id, filename, filename, video_path, '[]', '[5, 189, 251]', 'pending')
     )
     conn.commit()
     conn.close()
@@ -72,9 +78,12 @@ def get_job(task_id):
         return job_dict
     return None
 
-def get_all_jobs():
+def get_all_jobs(status=None):
     conn = get_db()
-    jobs = conn.execute('SELECT * FROM jobs ORDER BY created_at DESC').fetchall()
+    if status:
+        jobs = conn.execute('SELECT * FROM jobs WHERE status = ? ORDER BY created_at DESC', (status,)).fetchall()
+    else:
+        jobs = conn.execute('SELECT * FROM jobs ORDER BY created_at DESC').fetchall()
     conn.close()
     return [dict(job) for job in jobs]
 

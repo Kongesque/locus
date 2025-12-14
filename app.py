@@ -26,7 +26,7 @@ class UploadFileForm(FlaskForm):
 # Context Processor to inject history into all templates
 @app.context_processor
 def inject_history():
-    jobs = get_all_jobs()
+    jobs = get_all_jobs(status='completed')
     active_taskID = None
     # Only highlight active task on result or draw pages
     if request.endpoint in ['result', 'draw']:
@@ -79,7 +79,8 @@ def submit():
         pass
     end_time = time.time()
     process_time = round(end_time - start_time, 2)
-    update_job(taskID, process_time=process_time)
+    process_time = round(end_time - start_time, 2)
+    update_job(taskID, process_time=process_time, status='completed')
         
     # Cleanup source files
     if job.get('video_path') and os.path.exists(job['video_path']):
