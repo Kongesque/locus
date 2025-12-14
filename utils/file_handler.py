@@ -34,3 +34,13 @@ def handle_upload(file, upload_folder):
             update_job(taskID, frame_path=frame_path, frame_width=frame_size[0], frame_height=frame_size[1])
     
     return taskID
+
+def safe_remove_file(file_path):
+    """
+    Safely removes a file if it exists, ignoring errors.
+    """
+    if file_path and os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+        except OSError:
+            pass

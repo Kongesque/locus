@@ -5,7 +5,7 @@ from wtforms.validators import InputRequired
 import os
 import time
 from core.detector import detection
-from utils.file_handler import handle_upload
+from utils.file_handler import handle_upload, safe_remove_file
 from utils.db import init_db, get_job, update_job, get_all_jobs, delete_job
 from utils.coco_classes import COCO_CLASSES
 
@@ -103,17 +103,8 @@ def submit():
     update_job(taskID, process_time=process_time, status='completed')
         
     # Cleanup source files
-    if job.get('video_path') and os.path.exists(job['video_path']):
-        try:
-            os.remove(job['video_path'])
-        except OSError:
-            pass
-            
-    if job.get('frame_path') and os.path.exists(job['frame_path']):
-        try:
-            os.remove(job['frame_path'])
-        except OSError:
-            pass
+    safe_remove_file(job.get('video_path'))
+    safe_remove_file(job.get('frame_path'))
 
     return redirect(url_for('result', taskID=taskID))
 
@@ -183,30 +174,14 @@ def delete_history(task_id):
     job = get_job(task_id)
     if job:
         # Delete video file
-        if job.get('video_path'):
-            video_path = job['video_path']
-            if os.path.exists(video_path):
-                try:
-                    os.remove(video_path)
-                except OSError:
-                    pass
+        safe_remove_file(job.get('video_path'))
 
         # Delete frame file
-        if job.get('frame_path'):
-            frame_path = job['frame_path']
-            if os.path.exists(frame_path):
-                try:
-                    os.remove(frame_path)
-                except OSError:
-                    pass
+        safe_remove_file(job.get('frame_path'))
 
         # Delete output video
         output_path = os.path.join('uploads/outputs', f'output_{task_id}.mp4')
-        if os.path.exists(output_path):
-            try:
-                os.remove(output_path)
-            except OSError:
-                pass
+        safe_remove_file(output_path)
 
     delete_job(task_id)
     
