@@ -3,8 +3,7 @@ from flask_wtf import FlaskForm
 from wtforms import FileField, SubmitField
 from wtforms.validators import InputRequired
 import os
-import time
-from core.detector import detection
+from utils.processor import run_processing_pipeline
 from utils.file_handler import handle_upload, safe_remove_file
 from utils.db import init_db, get_job, update_job, get_all_jobs, delete_job
 from utils.coco_classes import COCO_CLASSES
@@ -14,6 +13,9 @@ init_db()
 app = Flask(__name__)  
 app.config['SECRET_KEY'] = 'kongesque'
 app.config['UPLOAD_FOLDER'] = 'uploads/videos'  
+
+DEFAULT_TARGET_CLASS = 19
+DEFAULT_CONFIDENCE = 40  
 
 # Ensure directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -77,34 +79,14 @@ def submit():
     if not job:
         return redirect(url_for('main'))
     
-    # Get target class from form
-    try:
-        target_class = int(request.form.get('target_class', 19))
-    except ValueError:
-        target_class = 19
-
-    # Get confidence from form
-    try:
-        confidence = int(request.form.get('confidence', 40))
-    except ValueError:
-        confidence = 40
+    # Get target class and confidence from form
+    target_class = request.form.get('target_class', DEFAULT_TARGET_CLASS, type=int)
+    confidence = request.form.get('confidence', DEFAULT_CONFIDENCE, type=int)
 
     update_job(taskID, target_class=target_class, confidence=confidence)
     
     # Process the video
-    # Note: detection is a generator, so we need to iterate to execute it
-    # We can probably optimize this or run it in background in a real app
-    # For now, we just consume the generator
-    start_time = time.time()
-    for _ in detection(job['video_path'], job['points'], (job['frame_width'], job['frame_height']), job['color'], taskID, target_class, confidence):
-        pass
-    end_time = time.time()
-    process_time = round(end_time - start_time, 2)
-    update_job(taskID, process_time=process_time, status='completed')
-        
-    # Cleanup source files
-    safe_remove_file(job.get('video_path'))
-    safe_remove_file(job.get('frame_path'))
+    run_processing_pipeline(taskID, job, target_class, confidence)
 
     return redirect(url_for('result', taskID=taskID))
 
