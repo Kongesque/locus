@@ -35,7 +35,9 @@ def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     newFPS = targetFPS if fps > targetFPS else fps
     interval = fps / newFPS
-    array = set(round(interval * i) for i in range(total_frames))
+    
+    process_idx = 0
+    
     fourcc = cv2.VideoWriter_fourcc(*'avc1')
     out = cv2.VideoWriter(DESTIN_VIDEO, fourcc, newFPS, (width, height))
 
@@ -45,13 +47,24 @@ def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf
 
     while cap.isOpened():
         
-        if (frame_counter + 1) not in array:
-            success = cap.grab()
-            if not success:
-                break
-            frame_counter += 1
-            continue
-
+        target_frame_idx = round(interval * process_idx)
+        
+        # If the current frame matches the target frame 
+        if (frame_counter + 1) != target_frame_idx:
+             # If we passed the target (should process next)
+             if (frame_counter + 1) > target_frame_idx:
+                 process_idx += 1
+                 target_frame_idx = round(interval * process_idx)
+             
+             if (frame_counter + 1) != target_frame_idx:
+                success = cap.grab()
+                if not success:
+                    break
+                frame_counter += 1
+                continue
+        
+        # Target frame reached
+        process_idx += 1
         success, frame = cap.read()
         
         if not success:
@@ -100,7 +113,10 @@ def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf
         count_text_position = (int(width * 0.855), int(height * 0.97))
         cv2.putText(frame, count_text, count_text_position, font, font_scale, (230, 232, 232), font_thickness) #  (5, 189, 251)
         
-        frame = cv2.resize(frame, (width, height))
+        # Only resize if necessary
+        if frame.shape[1] != width or frame.shape[0] != height:
+             frame = cv2.resize(frame, (width, height))
+             
         out.write(frame)
         
         # Calculate progress percentage
