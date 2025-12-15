@@ -7,8 +7,8 @@
 
 <!-- Sidebar -->
 <aside id="sidebar"
-    class="fixed lg:relative z-50 h-full bg-background flex flex-col overflow-hidden transition-all duration-300 ease-in-out -translate-x-full lg:translate-x-0 w-60 lg:w-0"
-    data-expanded="false">
+    class="fixed lg:relative z-50 h-full bg-background flex flex-col overflow-hidden -translate-x-full lg:translate-x-0 w-60 lg:w-60"
+    data-expanded="true">
 
     <!-- Sidebar Content -->
     <nav class="flex-1 p-2 space-y-1 overflow-y-auto overflow-x-hidden w-60">
@@ -50,9 +50,9 @@
     class="relative flex-1 flex items-center justify-center flex-col text-center mx-2 mt-0 mb-2 overflow-hidden bg-primary-color border border-primary-border rounded-md">
 
     <button onclick="toggleSidebar()"
-        class="absolute top-4 left-4 p-1 rounded-md hover:bg-sidebar-accent transition-colors">
+        class="absolute top-4 left-4 p-1.5 rounded-md hover:bg-sidebar-accent transition-colors">
         <img src="{{ url_for('static', filename='img/sidebar.svg') }}"
-            class="w-4.5 h-4.5 invert dark-only-invert opacity-80">
+            class="w-5 h-5 invert dark-only-invert opacity-80">
     </button>
 
     <div class="mb-4">

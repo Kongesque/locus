@@ -11,6 +11,8 @@ A powerful, modern web application leveraging **YOLO11** and **Flask** for accur
 - **Adjustable Confidence**: Fine-tune detection sensitivity with a built-in confidence threshold slider (Default: 40%).
 - **Accurate Tracking**: Uses **ByteTrack** for robust object tracking and consistency.
 - **Real-time Detection**: Powered by the state-of-the-art **YOLO11** model.
+- **Real-time Analytics 📊**: View object counting trends over time with interactive charts.
+- **Data Export 💾**: Download your detection data as CSV for offline analysis.
 - **History & Management**: Automatically saves processed jobs. Rename or delete past tasks easily.
 
 ## 🛠️ Tech Stack
