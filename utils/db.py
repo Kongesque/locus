@@ -60,6 +60,15 @@ def init_db():
     conn.commit()
     conn.close()
 
+    # Add progress column
+    conn = get_db()
+    try:
+        conn.execute('ALTER TABLE jobs ADD COLUMN progress INTEGER DEFAULT 0')
+        conn.commit()
+    except sqlite3.OperationalError:
+        pass
+    conn.close()
+
 def create_job(task_id, filename, video_path):
     conn = get_db()
     # Default name to filename, status to pending, target_class to 19 (cow), confidence to 40

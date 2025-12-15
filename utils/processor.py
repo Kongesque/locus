@@ -6,7 +6,8 @@ from utils.file_handler import safe_remove_file, clear_all_frames
 def run_processing_pipeline(taskID, job, target_class, confidence):
     start_time = time.time()
     
-    for _ in detection(
+    last_progress = 0
+    for frame, progress in detection(
         job['video_path'], 
         job['points'], 
         (job['frame_width'], job['frame_height']), 
@@ -15,7 +16,10 @@ def run_processing_pipeline(taskID, job, target_class, confidence):
         target_class, 
         confidence
     ):
-        pass
+        # Update progress in DB every 5% to avoid too many writes
+        if progress >= last_progress + 5 or progress == 100:
+            update_job(taskID, progress=progress)
+            last_progress = progress
         
     end_time = time.time()
     process_time = round(end_time - start_time, 2)

@@ -31,8 +31,8 @@ class UploadFileForm(FlaskForm):
 def inject_history():
     jobs = get_all_jobs(status='completed')
     active_taskID = None
-    # Only highlight active task on result or draw pages
-    if request.endpoint in ['result', 'draw']:
+    # Only highlight active task on result or zone pages
+    if request.endpoint in ['result', 'zone']:
         active_taskID = session.get('taskID')
     return dict(history_jobs=jobs, current_taskID=active_taskID)
 
@@ -46,11 +46,11 @@ def main():
     form = UploadFileForm()
     if request.method == 'POST' and form.validate_on_submit():
         taskID = handle_upload(form.file.data, app.config['UPLOAD_FOLDER'])
-        return redirect(url_for('draw', taskID=taskID))
+        return redirect(url_for('zone', taskID=taskID))
     return render_template('main.html', form=form)
     
-@app.route('/draw', methods=['GET', 'POST'])
-def draw():
+@app.route('/zone', methods=['GET', 'POST'])
+def zone():
     req_taskID = request.args.get('taskID')
     if req_taskID:
         job = get_job(req_taskID)
@@ -66,7 +66,7 @@ def draw():
          return redirect(url_for('main'))
          
     if job.get('frame_path'):
-         return render_template('draw.html', taskID=taskID, coco_classes=COCO_CLASSES)
+         return render_template('zone.html', taskID=taskID, coco_classes=COCO_CLASSES)
     return redirect(url_for('main'))
 
 @app.route('/submit', methods=['POST'])
@@ -110,7 +110,7 @@ def result():
     form = UploadFileForm()
     if request.method == 'POST' and form.validate_on_submit():
         taskID = handle_upload(form.file.data, app.config['UPLOAD_FOLDER'])
-        return redirect(url_for('draw', taskID=taskID))
+        return redirect(url_for('zone', taskID=taskID))
         
     job = get_job(taskID)
     if not job:
@@ -180,6 +180,16 @@ def rename_history(task_id):
         update_job(task_id, name=new_name)
         return jsonify({"success": True})
     return jsonify({"success": False, "error": "No name provided"}), 400
+
+@app.route('/api/progress/<task_id>')
+def get_progress(task_id):
+    job = get_job(task_id)
+    if job:
+        return jsonify({
+            "progress": job.get('progress', 0),
+            "status": job.get('status', 'pending')
+        })
+    return jsonify({"progress": 0, "status": "not_found"})
     
 if __name__ == "__main__":
     app.run(debug=True)

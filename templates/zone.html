@@ -125,7 +125,7 @@
 
     <!-- Loading Screen -->
     <div id="loading" class="loading-overlay hidden">
-        <div class="flex flex-col items-center justify-center gap-2">
+        <div class="flex flex-col items-center justify-center">
 
             <!-- Circular Progress -->
             <div class="relative w-24 h-24">
@@ -145,7 +145,7 @@
             </div>
 
             <!-- Text Content -->
-            <div class="flex flex-col items-center gap-1">
+            <div class="flex flex-col items-center">
                 <p class="text-lg font-medium text-text-color">
                     Processing video<span class="animate-pulse">...</span>
                 </p>
@@ -157,7 +157,7 @@
 
     <div id="responseMessage"></div>
 
-    <script src="{{url_for('static', filename='js/draw.js')}}"></script>
+    <script src="{{url_for('static', filename='js/zone.js')}}"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
         $(document).ready(function () {
@@ -170,29 +170,37 @@
             $("footer#content").hide();
             $("#loading").removeClass("hidden").css("display", "flex");
 
-            // Text is now static in HTML, no need to set dynamically
-
-            // Circular Progress Animation
-            let progress = 0;
             const circle = document.getElementById('progressCircle');
             const text = document.getElementById('progressText');
             const circumference = 264; // 2 * π * 42
+            const taskID = "{{ taskID }}";
 
-            const interval = setInterval(() => {
-                // Simulate progress with random increments
-                progress += Math.random() * 2;
+            // Poll backend for real progress
+            const pollProgress = () => {
+                fetch(`/api/progress/${taskID}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const progress = data.progress || 0;
 
-                // Slow down approach to 99%
-                if (progress > 99) {
-                    progress = 99;
-                    clearInterval(interval);
-                }
+                        // Update circle (offset goes from 264 to 0)
+                        const offset = circumference - (progress / 100) * circumference;
+                        circle.style.strokeDashoffset = offset;
+                        text.innerText = progress;
 
-                // Update circle (offset goes from 264 to 0)
-                const offset = circumference - (progress / 100) * circumference;
-                circle.style.strokeDashoffset = offset;
-                text.innerText = Math.round(progress);
-            }, 500);
+                        // If completed, the form will redirect automatically
+                        // Keep polling until redirected
+                        if (data.status !== 'completed') {
+                            setTimeout(pollProgress, 500);
+                        }
+                    })
+                    .catch(() => {
+                        // On error, retry after delay
+                        setTimeout(pollProgress, 1000);
+                    });
+            };
+
+            // Start polling after a short delay to let the form submit
+            setTimeout(pollProgress, 1000);
         };
 
         // Handle Class Selection

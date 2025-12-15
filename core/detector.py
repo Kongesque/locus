@@ -44,15 +44,20 @@ def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf
     area_np = np.array(Area, np.int32)
 
     while cap.isOpened():
+        
+        if (frame_counter + 1) not in array:
+            success = cap.grab()
+            if not success:
+                break
+            frame_counter += 1
+            continue
+
         success, frame = cap.read()
         
         if not success:
             break
         
         frame_counter += 1
-
-        if frame_counter not in array: 
-            continue
 
 
         # Normalize confidence to 0.0-1.0 range
@@ -98,8 +103,11 @@ def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf
         frame = cv2.resize(frame, (width, height))
         out.write(frame)
         
+        # Calculate progress percentage
+        progress = int((frame_counter / total_frames) * 100) if total_frames > 0 else 0
+        
         if success:
-            yield frame
+            yield frame, progress
         else:
             break
         
