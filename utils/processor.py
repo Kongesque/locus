@@ -7,7 +7,9 @@ def run_processing_pipeline(taskID, job, target_class, confidence):
     start_time = time.time()
     
     last_progress = 0
-    for frame, progress in detection(
+    final_detection_events = []
+    
+    for frame, progress, detection_events in detection(
         job['video_path'], 
         job['points'], 
         (job['frame_width'], job['frame_height']), 
@@ -16,6 +18,7 @@ def run_processing_pipeline(taskID, job, target_class, confidence):
         target_class, 
         confidence
     ):
+        final_detection_events = detection_events
         # Update progress in DB every 5% to avoid too many writes
         if progress >= last_progress + 5 or progress == 100:
             update_job(taskID, progress=progress)
@@ -24,7 +27,7 @@ def run_processing_pipeline(taskID, job, target_class, confidence):
     end_time = time.time()
     process_time = round(end_time - start_time, 2)
     
-    update_job(taskID, process_time=process_time, status='completed')
+    update_job(taskID, process_time=process_time, status='completed', detection_data=final_detection_events)
     
     safe_remove_file(job.get('video_path'))
     clear_all_frames()  # Remove all frames in frames folder

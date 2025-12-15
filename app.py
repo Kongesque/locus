@@ -1,4 +1,7 @@
-from flask import Flask, render_template, request, session, jsonify, redirect, url_for, send_from_directory
+from flask import Flask, render_template, request, session, jsonify, redirect, url_for, send_from_directory, Response
+import csv
+import io
+import json
 from flask_wtf import FlaskForm
 from wtforms import FileField, SubmitField
 from wtforms.validators import InputRequired
@@ -119,8 +122,9 @@ def result():
     width = job.get('frame_width')
     height = job.get('frame_height')
     process_time = job.get('process_time', 0)
+    detection_data = job.get('detection_data', [])
     
-    return render_template('result.html', form=form, taskID=taskID, width=width, height=height, process_time=process_time)
+    return render_template('result.html', form=form, taskID=taskID, width=width, height=height, process_time=process_time, detection_data=detection_data)
 
 @app.route('/get_coordinates', methods=['POST'])
 def get_coordinates():
@@ -191,5 +195,26 @@ def get_progress(task_id):
         })
     return jsonify({"progress": 0, "status": "not_found"})
     
+@app.route('/api/export/<task_id>/csv')
+def export_csv(task_id):
+    job = get_job(task_id)
+    if not job:
+        return "Job not found", 404
+        
+    detection_data = job.get('detection_data', [])
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Timestamp (s)', 'Count'])
+    
+    for event in detection_data:
+        writer.writerow([event['time'], event['count']])
+        
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-disposition": f"attachment; filename=zonenet_data_{task_id}.csv"}
+    )
+
 if __name__ == "__main__":
     app.run(debug=True)

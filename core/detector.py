@@ -15,7 +15,10 @@ def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf
     font = cv2.FONT_ITALIC
     frame_counter = 0
     track_history = defaultdict(lambda: [])
+    track_history = defaultdict(lambda: [])
     crossed_objects = {}
+    detection_events = []
+
    
     width = frame_size[0]
     height = frame_size[1]
@@ -97,6 +100,12 @@ def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf
             if results >= 0:
                 if track_id not in crossed_objects:
                     crossed_objects[track_id] = True
+                    # Log event
+                    timestamp = round(frame_counter / fps, 2)
+                    detection_events.append({
+                        "time": timestamp,
+                        "count": len(crossed_objects)
+                    })
                     
                 cv2.circle(frame, (center_x, center_y), 9, (244, 133, 66), -1) # Blue (Counting) GBR
 
@@ -123,7 +132,7 @@ def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf
         progress = int((frame_counter / total_frames) * 100) if total_frames > 0 else 0
         
         if success:
-            yield frame, progress
+            yield frame, progress, detection_events
         else:
             break
         

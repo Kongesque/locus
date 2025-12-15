@@ -57,6 +57,12 @@ def init_db():
         # Column likely already exists
         pass
         
+    try:
+        conn.execute('ALTER TABLE jobs ADD COLUMN detection_data TEXT')
+    except sqlite3.OperationalError:
+        # Column likely already exists
+        pass
+        
     conn.commit()
     conn.close()
 
@@ -96,6 +102,12 @@ def get_job(task_id):
         except:
              job_dict['color'] = [5, 189, 251]
              
+        try:
+             job_dict['detection_data'] = json.loads(job_dict['detection_data']) if job_dict['detection_data'] else []
+        except:
+             job_dict['detection_data'] = []
+
+             
         # Ensure target_class is present (for old records)
         if 'target_class' not in job_dict or job_dict['target_class'] is None:
             job_dict['target_class'] = 19
@@ -130,6 +142,8 @@ def update_job(task_id, **kwargs):
         kwargs['points'] = json.dumps(kwargs['points'])
     if 'color' in kwargs:
         kwargs['color'] = json.dumps(kwargs['color'])
+    if 'detection_data' in kwargs:
+        kwargs['detection_data'] = json.dumps(kwargs['detection_data'])
 
     columns = ', '.join(f"{key} = ?" for key in kwargs.keys())
     values = list(kwargs.values())

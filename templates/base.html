@@ -7,6 +7,14 @@
     <title>ZoneNet</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
+    <script>
+        // Check for saved theme preference or system preference
+        if (localStorage.theme === 'light' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+            document.documentElement.classList.add('light')
+        } else {
+            document.documentElement.classList.remove('light')
+        }
+    </script>
     {% block head %}{% endblock %}
 </head>
 
@@ -28,10 +36,35 @@
         </a>
         <div class="flex items-center gap-2">
             {% block header_actions %}
+            <button onclick="toggleTheme()"
+                class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-btn-hover transition-colors text-text-color"
+                title="Toggle Theme">
+                <!-- Sun Icon (for Dark Mode) -->
+                <svg class="hidden light:block w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5" />
+                    <line x1="12" y1="1" x2="12" y2="3" />
+                    <line x1="12" y1="21" x2="12" y2="23" />
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                    <line x1="1" y1="12" x2="3" y2="12" />
+                    <line x1="21" y1="12" x2="23" y2="12" />
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+                <!-- Moon Icon (for Light Mode) -->
+                <svg class="block light:hidden w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+            </button>
             <a href="mailto:kongesque@gmail.com" class="btn-secondary no-underline">Feedback</a>
             <a href="https://github.com/Kongesque" target="_blank"
                 class="w-6 h-6 flex items-center justify-center rounded-full">
-                <img src="{{ url_for('static', filename='img/github.svg') }}" class="w-6 h-6 invert opacity-80">
+                <img src="{{ url_for('static', filename='img/github.svg') }}"
+                    class="w-6 h-6 invert dark-only-invert opacity-80">
             </a>
             {% endblock %}
         </div>
@@ -249,6 +282,16 @@
                     }
                 }
             });
+        }
+
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('light')) {
+                document.documentElement.classList.remove('light');
+                localStorage.theme = 'dark';
+            } else {
+                document.documentElement.classList.add('light');
+                localStorage.theme = 'light';
+            }
         }
     </script>
     {% block scripts %}{% endblock %}

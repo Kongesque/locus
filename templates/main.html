@@ -49,10 +49,10 @@
 <main id="content"
     class="relative flex-1 flex items-center justify-center flex-col text-center mx-2 mt-0 mb-2 overflow-hidden bg-primary-color border border-primary-border rounded-md">
 
-    <!-- Sidebar Toggle -->
     <button onclick="toggleSidebar()"
         class="absolute top-4 left-4 p-1 rounded-md hover:bg-sidebar-accent transition-colors">
-        <img src="{{ url_for('static', filename='img/sidebar.svg') }}" class="w-4.5 h-4.5 invert opacity-80">
+        <img src="{{ url_for('static', filename='img/sidebar.svg') }}"
+            class="w-4.5 h-4.5 invert dark-only-invert opacity-80">
     </button>
 
     <div class="mb-4">

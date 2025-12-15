@@ -1,4 +1,7 @@
 {% extends 'base.html' %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
 
 {% block header_actions %}
 {% endblock %}
@@ -8,11 +11,21 @@
 
 
 
-    <div class="w-full h-full flex items-center justify-center p-4">
-        <video class="max-w-full max-h-full object-contain rounded-xl" controls>
+    <div class="w-full h-full flex flex-col items-center justify-start p-4 gap-6 overflow-y-auto">
+        <video class="max-w-full max-h-[60vh] object-contain rounded-xl shadow-lg" controls>
             <source src="{{ url_for('media_file', filename='outputs/' + 'output_' + taskID + '.mp4') }}"
                 type="video/mp4">
         </video>
+
+        <!-- Analytics Section -->
+        <div class="w-full max-w-4xl bg-secondary-bg rounded-xl p-4 shadow-sm border border-primary-border">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-text-color font-semibold text-lg">Analytics</h3>
+            </div>
+            <div class="w-full h-64">
+                <canvas id="analyticsChart"></canvas>
+            </div>
+        </div>
     </div>
 </main>
 
@@ -33,11 +46,99 @@
         </p>
     </div>
     <div class="flex items-center gap-3">
-        <!-- Upload button removed -->
+        <a href="{{ url_for('export_csv', task_id=taskID) }}"
+            class="btn-primary flex items-center gap-2 hover:bg-hover-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" x2="12" y1="15" y2="3" />
+            </svg>
+            Download CSV
+        </a>
     </div>
 </footer>
 {% endblock %}
 
 {% block scripts %}
+<script id="detection-data" type="application/json">
+    {{ detection_data | tojson }}
+</script>
+<script>
+    const detectionData = JSON.parse(document.getElementById('detection-data').textContent);
+
+    if (detectionData && detectionData.length > 0) {
+        const ctx = document.getElementById('analyticsChart').getContext('2d');
+
+        // Downsample for chart clarity if too many points
+        const labels = detectionData.map(d => d.time);
+        const data = detectionData.map(d => d.count);
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Objects Counted',
+                    data: data,
+                    borderColor: '#1F6F65', // Accent color (Teal)
+                    backgroundColor: 'rgba(31, 111, 101, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#1f2937',
+                        titleColor: '#f3f4f6',
+                        bodyColor: '#d1d5db',
+                        padding: 10,
+                        displayColors: false,
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false,
+                            color: '#374151'
+                        },
+                        ticks: {
+                            color: '#9ca3af',
+                            maxTicksLimit: 10
+                        },
+                        title: {
+                            display: true,
+                            text: 'Time (s)',
+                            color: '#6b7280'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(55, 65, 81, 0.5)'
+                        },
+                        ticks: {
+                            color: '#9ca3af',
+                            precision: 0
+                        },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+</script>
 <script src="{{url_for('static', filename='js/result.js')}}"></script>
 {% endblock %}
