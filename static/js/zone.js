@@ -3,7 +3,6 @@ const previewFrame = document.getElementById('image'),
     pointValue = document.querySelector(".point-info .value"),
     canvas = document.getElementById('canvas'),
     ctx = canvas.getContext('2d'),
-    clearAllBtn = document.querySelector(".draw"),
     processBtn = document.querySelector(".run .process"),
     addZoneBtn = document.getElementById('addZoneBtn'),
     zoneListContainer = document.getElementById('zoneList'),
@@ -353,16 +352,6 @@ const handleCanvasMouseMove = (e) => {
     ctx.stroke();
     ctx.setLineDash([]);
 }
-
-// Clear all zones
-clearAllBtn.addEventListener("click", () => {
-    zones = [];
-    activeZoneIndex = -1;
-
-    renderZoneList();
-    redrawCanvas();
-    syncZonesToBackend();
-});
 
 // Add zone button
 addZoneBtn.addEventListener("click", addZone);
