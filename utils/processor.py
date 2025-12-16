@@ -3,7 +3,7 @@ from core.detector import detection
 from utils.db import update_job
 from utils.file_handler import clear_all_uploads
 
-def run_processing_pipeline(taskID, job, zones, confidence):
+def run_processing_pipeline(taskID, job, zones, confidence, model='yolo11n.pt'):
     """
     Run video processing pipeline with multiple zones.
     
@@ -23,7 +23,8 @@ def run_processing_pipeline(taskID, job, zones, confidence):
         zones,
         (job['frame_width'], job['frame_height']), 
         taskID, 
-        confidence
+        confidence,
+        model
     ):
         final_detection_events = detection_events
         # Update progress in DB every 5% to avoid too many writes

@@ -57,7 +57,7 @@ def check_line_crossing(prev_pos, curr_pos, line_start, line_end):
     return ccw(A, C, D) != ccw(B, C, D) and ccw(A, B, C) != ccw(A, B, D)
 
 
-def detection(path_x, zones, frame_size, taskID, conf=40):
+def detection(path_x, zones, frame_size, taskID, conf=40, model_name='yolo11n.pt'):
     """
     Process video with multiple detection zones.
     
@@ -67,6 +67,7 @@ def detection(path_x, zones, frame_size, taskID, conf=40):
         frame_size: Tuple of (width, height)
         taskID: Task identifier for output file naming
         conf: Confidence threshold (1-100)
+        model_name: Name of the YOLO model file (default: yolo11n.pt)
     """
     # Constants
     SOURCE_VIDEO = path_x
@@ -90,7 +91,30 @@ def detection(path_x, zones, frame_size, taskID, conf=40):
     BASE_FONT_THICKNESS = 2
     font_thickness = max(1, max(width, height) // 1000 * BASE_FONT_THICKNESS)
 
-    model = YOLO('weights/yolo11n.pt')
+    model_path = f"weights/{model_name}"
+    
+    # Check if model exists in weights folder
+    import os
+    if not os.path.exists(model_path):
+        print(f"Model {model_name} not found in weights/. Attempting auto-download...")
+        try:
+            # Download to current directory (default YOLO behavior)
+            from ultralytics import YOLO
+            temp_model = YOLO(model_name) 
+            
+            # Move to weights folder
+            import shutil
+            # YOLO downloads to current directory
+            if os.path.exists(model_name):
+                shutil.move(model_name, model_path)
+                print(f"Moved {model_name} to {model_path}")
+                
+            model = YOLO(model_path)
+        except Exception as e:
+            print(f"Failed to auto-download {model_name}: {e}. Falling back to yolo11n.pt")
+            model = YOLO('weights/yolo11n.pt')
+    else:
+        model = YOLO(model_path)
 
     cap = cv2.VideoCapture(SOURCE_VIDEO)
 

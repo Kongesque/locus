@@ -85,6 +85,7 @@ def submit():
     # Get zones and confidence from form
     zones_json = request.form.get('zones', '[]')
     confidence = request.form.get('confidence', DEFAULT_CONFIDENCE, type=int)
+    model = request.form.get('model', 'yolo11n.pt')
     
     try:
         zones = json.loads(zones_json)
@@ -94,10 +95,10 @@ def submit():
     # Filter to only complete zones (with enough points)
     complete_zones = [z for z in zones if len(z.get('points', [])) >= 2]
 
-    update_job(taskID, zones=complete_zones, confidence=confidence)
+    update_job(taskID, zones=complete_zones, confidence=confidence, model=model)
     
     # Process the video with zones
-    run_processing_pipeline(taskID, job, complete_zones, confidence)
+    run_processing_pipeline(taskID, job, complete_zones, confidence, model)
 
     return redirect(url_for('result', taskID=taskID))
 

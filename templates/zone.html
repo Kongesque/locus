@@ -99,11 +99,29 @@
                                 class="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-text-color">
                         </div>
                     </div>
+
+                    <!-- Model Selection -->
+                    <div class="model-selection mt-4">
+                        <div class="model-info flex justify-between text-sm mb-2">
+                            <span class="text-secondary-text">Model</span>
+                            <span class="text-text-color font-medium" id="selectedModelText">Fastest</span>
+                        </div>
+                        <select id="modelSelect"
+                            class="w-full bg-secondary-bg text-text-color border border-btn-border rounded-lg p-1.5 text-xs focus:outline-none focus:border-blue-500 appearance-none cursor-pointer">
+                            <option value="yolo11n.pt" selected>YOLO11n (Fastest)</option>
+                            <option value="yolo11s.pt">YOLO11s (Fast)</option>
+                            <option value="yolo11m.pt">YOLO11m (Balanced)</option>
+                            <option value="yolo11l.pt">YOLO11l (Accurate)</option>
+                            <option value="yolo11x.pt">YOLO11x (Most Accurate)</option>
+                        </select>
+                        <p class="text-xs text-secondary-text mt-1.5">*Larger models are more accurate but slower</p>
+                    </div>
                 </div>
 
                 <form action="{{ url_for('submit') }}" method="post" class="mt-4 md:mt-0">
                     <input type="hidden" name="zones" id="zonesInput" value="[]">
                     <input type="hidden" name="confidence" id="confidenceInput" value="35">
+                    <input type="hidden" name="model" id="modelInput" value="yolo11n.pt">
                     <div class="run disable">
                         <button class="process btn-primary w-full py-3" onclick="loading();">Process</button>
                     </div>
@@ -225,6 +243,23 @@
             confidenceSlider.addEventListener('input', (e) => {
                 confidenceValue.innerText = `${e.target.value}%`;
                 confidenceInput.value = e.target.value;
+            });
+        }
+
+        // Handle Model Selection
+        const modelSelect = document.getElementById('modelSelect');
+        const modelInput = document.getElementById('modelInput');
+        const selectedModelText = document.getElementById('selectedModelText');
+
+        if (modelSelect && modelInput && selectedModelText) {
+            modelSelect.addEventListener('change', (e) => {
+                modelInput.value = e.target.value;
+                // Update label (extract text in parenthesis)
+                const text = e.target.options[e.target.selectedIndex].text;
+                const match = text.match(/\((.*?)\)/);
+                if (match) {
+                    selectedModelText.innerText = match[1].split(' - ')[0]; // Just the size name
+                }
             });
         }
 

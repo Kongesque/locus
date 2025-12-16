@@ -12,6 +12,7 @@ ZoneNet is a professional-grade **Computer Vision** application designed for pre
 
 - **Custom Region of Interest (ROI)**: Draw specific polygons on your video to precision-count objects only within defined areas. Perfect for specific lane counting or zone monitoring.
 - **Dynamic Object Selection**: Select ANY of the 80 COCO classes (Person, Car, Bicycle, etc.) to track and count. No code changes required!
+- **Model Selection**: Switch between YOLO11 Nano (fastest) to XLarge (most accurate) depending on your needs.
 - **Adjustable Confidence**: Fine-tune detection sensitivity with a built-in confidence threshold slider (Default: 35%).
 - **Accurate Tracking**: Uses **ByteTrack** for robust object tracking and consistency.
 - **Real-time Detection**: Powered by the state-of-the-art **YOLO11** model for low-latency processing.
@@ -85,6 +86,12 @@ This project uses `uv` for lightning-fast Python dependency management and `npm`
 
 ### Object Classes
 ZoneNet maps the standard **COCO 80 classes**. You can select these directly from the UI. 
+
+### Model Selection
+- **YOLO11n (Nano)**: Fastest, use for real-time preview (Default).
+- **YOLO11s/m (Small/Medium)**: Balanced for general use.
+- **YOLO11l/x (Large/XLarge)**: Best accuracy for small or distant objects, slower processing. 
+*(Note: Larger models will be automatically downloaded on first use if not present locally.)* 
 
 ### Confidence Threshold
 - **Lower (~10-20%)**: Catches more objects but may include false positives (e.g., seeing a "car" in a shadow).

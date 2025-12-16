@@ -88,6 +88,15 @@ def init_db():
         pass
     conn.close()
 
+    # Add model column
+    conn = get_db()
+    try:
+        conn.execute('ALTER TABLE jobs ADD COLUMN model TEXT DEFAULT "yolo11n.pt"')
+        conn.commit()
+    except sqlite3.OperationalError:
+        pass
+    conn.close()
+
 def create_job(task_id, filename, video_path):
     conn = get_db()
     # Default name to filename, status to pending, confidence to 35
@@ -134,6 +143,12 @@ def get_job(task_id):
         # Ensure confidence is present (for old records)
         if 'confidence' not in job_dict or job_dict['confidence'] is None:
             job_dict['confidence'] = 25
+             
+        if 'confidence' not in job_dict or job_dict['confidence'] is None:
+            job_dict['confidence'] = 35
+
+        if 'model' not in job_dict or job_dict['model'] is None:
+            job_dict['model'] = 'yolo11n.pt'
              
         return job_dict
     return None
