@@ -41,8 +41,8 @@ This project uses `uv` for lightning-fast Python dependency management and `npm`
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/Kongesque/custom-region-object-counter-YOLOV8.git
-   cd custom-region-object-counter-YOLOV8
+   git clone https://github.com/Kongesque/zonenet.git
+   cd zonenet
    ```
 
 2. **Install `uv` (if not already installed):**
