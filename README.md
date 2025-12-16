@@ -97,3 +97,15 @@ ZoneNet maps the standard **COCO 80 classes**. You can select these directly fro
 - **Lower (~10-20%)**: Catches more objects but may include false positives (e.g., seeing a "car" in a shadow).
 - **Default (35%)**: The "sweet spot" balanced for general tracking.
 - **Higher (>60%)**: Only counts objects the model is extremely sure about.
+
+### ByteTrack Tracking Settings
+Fine-tune the tracking algorithm via the collapsible **Advanced Tracking Settings** panel:
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| **Detection Quality** | Higher = cleaner tracks, fewer false positives | 0.45 |
+| **Recovery Sensitivity** | Lower = better recovery of occluded objects | 0.10 |
+| **Match Threshold** | Lower = more lenient matching, fewer ID switches | 0.80 |
+| **Track Memory** | Frames to remember lost tracks (10-120) | 30 |
+
+*Tip: Increase Track Memory for videos with frequent occlusions or objects leaving/entering frame.*

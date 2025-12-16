@@ -97,6 +97,15 @@ def init_db():
         pass
     conn.close()
 
+    # Add tracker_config column for ByteTrack settings
+    conn = get_db()
+    try:
+        conn.execute('ALTER TABLE jobs ADD COLUMN tracker_config TEXT')
+        conn.commit()
+    except sqlite3.OperationalError:
+        pass
+    conn.close()
+
 def create_job(task_id, filename, video_path):
     conn = get_db()
     # Default name to filename, status to pending, confidence to 35
@@ -149,6 +158,18 @@ def get_job(task_id):
 
         if 'model' not in job_dict or job_dict['model'] is None:
             job_dict['model'] = 'yolo11n.pt'
+
+        # Parse tracker_config JSON (ByteTrack settings)
+        default_tracker_config = {
+            'track_high_thresh': 0.45,
+            'track_low_thresh': 0.1,
+            'match_thresh': 0.8,
+            'track_buffer': 30
+        }
+        try:
+            job_dict['tracker_config'] = json.loads(job_dict['tracker_config']) if job_dict.get('tracker_config') else default_tracker_config
+        except:
+            job_dict['tracker_config'] = default_tracker_config
              
         return job_dict
     return None
@@ -180,6 +201,8 @@ def update_job(task_id, **kwargs):
         kwargs['detection_data'] = json.dumps(kwargs['detection_data'])
     if 'zones' in kwargs:
         kwargs['zones'] = json.dumps(kwargs['zones'])
+    if 'tracker_config' in kwargs:
+        kwargs['tracker_config'] = json.dumps(kwargs['tracker_config'])
 
     columns = ', '.join(f"{key} = ?" for key in kwargs.keys())
     values = list(kwargs.values())

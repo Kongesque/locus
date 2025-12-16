@@ -86,19 +86,34 @@ def submit():
     zones_json = request.form.get('zones', '[]')
     confidence = request.form.get('confidence', DEFAULT_CONFIDENCE, type=int)
     model = request.form.get('model', 'yolo11n.pt')
+    tracker_config_json = request.form.get('tracker_config', '{}')
     
     try:
         zones = json.loads(zones_json)
     except:
         zones = job.get('zones', [])
     
+    # Parse tracker config with defaults
+    default_tracker_config = {
+        'track_high_thresh': 0.45,
+        'track_low_thresh': 0.1,
+        'match_thresh': 0.8,
+        'track_buffer': 30
+    }
+    try:
+        tracker_config = json.loads(tracker_config_json)
+        # Merge with defaults in case some fields are missing
+        tracker_config = {**default_tracker_config, **tracker_config}
+    except:
+        tracker_config = default_tracker_config
+    
     # Filter to only complete zones (with enough points)
     complete_zones = [z for z in zones if len(z.get('points', [])) >= 2]
 
-    update_job(taskID, zones=complete_zones, confidence=confidence, model=model)
+    update_job(taskID, zones=complete_zones, confidence=confidence, model=model, tracker_config=tracker_config)
     
     # Process the video with zones
-    run_processing_pipeline(taskID, job, complete_zones, confidence, model)
+    run_processing_pipeline(taskID, job, complete_zones, confidence, model, tracker_config)
 
     return redirect(url_for('result', taskID=taskID))
 

@@ -116,12 +116,94 @@
                         </select>
                         <p class="text-xs text-secondary-text mt-1.5">*Larger models are more accurate but slower</p>
                     </div>
+
+                    <!-- Advanced Settings (Collapsible) -->
+                    <div class="advanced-settings mt-4">
+                        <button type="button" id="advancedToggle"
+                            class="w-full flex items-center justify-between text-sm text-secondary-text hover:text-text-color transition-colors cursor-pointer py-2">
+                            <span class="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path
+                                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                    </path>
+                                </svg>
+                                Advanced Tracking Settings
+                            </span>
+                            <svg id="advancedChevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round"
+                                class="transition-transform duration-200">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+
+                        <div id="advancedPanel" class="hidden mt-3 space-y-4 pl-1 border-l-2 border-btn-border ml-1.5">
+                            <!-- Detection Quality (track_high_thresh) -->
+                            <div class="slider-advanced pl-3">
+                                <div class="flex justify-between text-xs mb-1.5">
+                                    <span class="text-secondary-text"
+                                        title="Higher values = cleaner tracks, fewer false positives">Detection
+                                        Quality</span>
+                                    <span class="value-high-thresh text-text-color font-medium">0.45</span>
+                                </div>
+                                <input type="range" id="trackHighThresh" value="45" min="10" max="90" step="5"
+                                    class="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-text-color">
+                            </div>
+
+                            <!-- Recovery Sensitivity (track_low_thresh) -->
+                            <div class="slider-advanced pl-3">
+                                <div class="flex justify-between text-xs mb-1.5">
+                                    <span class="text-secondary-text"
+                                        title="Lower values = better recovery of occluded objects">Recovery
+                                        Sensitivity</span>
+                                    <span class="value-low-thresh text-text-color font-medium">0.10</span>
+                                </div>
+                                <input type="range" id="trackLowThresh" value="10" min="1" max="50" step="1"
+                                    class="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-text-color">
+                            </div>
+
+                            <!-- Match Threshold -->
+                            <div class="slider-advanced pl-3">
+                                <div class="flex justify-between text-xs mb-1.5">
+                                    <span class="text-secondary-text"
+                                        title="Lower values = more lenient matching, fewer ID switches">Match
+                                        Threshold</span>
+                                    <span class="value-match-thresh text-text-color font-medium">0.80</span>
+                                </div>
+                                <input type="range" id="matchThresh" value="80" min="30" max="95" step="5"
+                                    class="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-text-color">
+                            </div>
+
+                            <!-- Track Memory (track_buffer) -->
+                            <div class="slider-advanced pl-3">
+                                <div class="flex justify-between text-xs mb-1.5">
+                                    <span class="text-secondary-text"
+                                        title="Frames to remember lost tracks (higher = handles longer occlusions)">Track
+                                        Memory</span>
+                                    <span class="value-track-buffer text-text-color font-medium">30</span>
+                                </div>
+                                <input type="range" id="trackBuffer" value="30" min="10" max="120" step="5"
+                                    class="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-text-color">
+                            </div>
+
+                            <!-- Reset Button -->
+                            <button type="button" id="resetAdvanced"
+                                class="w-full text-xs text-secondary-text hover:text-text-color transition-colors py-1.5 cursor-pointer">
+                                Reset to defaults
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <form action="{{ url_for('submit') }}" method="post" class="mt-4 md:mt-0">
                     <input type="hidden" name="zones" id="zonesInput" value="[]">
                     <input type="hidden" name="confidence" id="confidenceInput" value="35">
                     <input type="hidden" name="model" id="modelInput" value="yolo11n.pt">
+                    <input type="hidden" name="tracker_config" id="trackerConfigInput"
+                        value='{"track_high_thresh":0.45,"track_low_thresh":0.1,"match_thresh":0.8,"track_buffer":30}'>
                     <div class="run disable">
                         <button class="process btn-primary w-full py-3" onclick="loading();">Process</button>
                     </div>
@@ -271,6 +353,98 @@
                 document.documentElement.classList.add('light');
                 localStorage.theme = 'light';
             }
+        }
+
+        // Advanced Settings Panel
+        const advancedToggle = document.getElementById('advancedToggle');
+        const advancedPanel = document.getElementById('advancedPanel');
+        const advancedChevron = document.getElementById('advancedChevron');
+        const trackerConfigInput = document.getElementById('trackerConfigInput');
+
+        // Slider elements
+        const trackHighThresh = document.getElementById('trackHighThresh');
+        const trackLowThresh = document.getElementById('trackLowThresh');
+        const matchThresh = document.getElementById('matchThresh');
+        const trackBuffer = document.getElementById('trackBuffer');
+
+        // Value display elements
+        const valueHighThresh = document.querySelector('.value-high-thresh');
+        const valueLowThresh = document.querySelector('.value-low-thresh');
+        const valueMatchThresh = document.querySelector('.value-match-thresh');
+        const valueTrackBuffer = document.querySelector('.value-track-buffer');
+
+        // Default values
+        const defaults = {
+            track_high_thresh: 0.45,
+            track_low_thresh: 0.1,
+            match_thresh: 0.8,
+            track_buffer: 30
+        };
+
+        // Toggle panel visibility
+        if (advancedToggle && advancedPanel) {
+            advancedToggle.addEventListener('click', () => {
+                advancedPanel.classList.toggle('hidden');
+                advancedChevron.style.transform = advancedPanel.classList.contains('hidden') ? '' : 'rotate(180deg)';
+            });
+        }
+
+        // Update tracker config from sliders
+        function updateTrackerConfig() {
+            const config = {
+                track_high_thresh: parseFloat(trackHighThresh.value) / 100,
+                track_low_thresh: parseFloat(trackLowThresh.value) / 100,
+                match_thresh: parseFloat(matchThresh.value) / 100,
+                track_buffer: parseInt(trackBuffer.value)
+            };
+            trackerConfigInput.value = JSON.stringify(config);
+        }
+
+        // Slider event handlers
+        if (trackHighThresh) {
+            trackHighThresh.addEventListener('input', (e) => {
+                valueHighThresh.innerText = (e.target.value / 100).toFixed(2);
+                updateTrackerConfig();
+            });
+        }
+
+        if (trackLowThresh) {
+            trackLowThresh.addEventListener('input', (e) => {
+                valueLowThresh.innerText = (e.target.value / 100).toFixed(2);
+                updateTrackerConfig();
+            });
+        }
+
+        if (matchThresh) {
+            matchThresh.addEventListener('input', (e) => {
+                valueMatchThresh.innerText = (e.target.value / 100).toFixed(2);
+                updateTrackerConfig();
+            });
+        }
+
+        if (trackBuffer) {
+            trackBuffer.addEventListener('input', (e) => {
+                valueTrackBuffer.innerText = e.target.value;
+                updateTrackerConfig();
+            });
+        }
+
+        // Reset to defaults
+        const resetAdvanced = document.getElementById('resetAdvanced');
+        if (resetAdvanced) {
+            resetAdvanced.addEventListener('click', () => {
+                trackHighThresh.value = defaults.track_high_thresh * 100;
+                trackLowThresh.value = defaults.track_low_thresh * 100;
+                matchThresh.value = defaults.match_thresh * 100;
+                trackBuffer.value = defaults.track_buffer;
+
+                valueHighThresh.innerText = defaults.track_high_thresh.toFixed(2);
+                valueLowThresh.innerText = defaults.track_low_thresh.toFixed(2);
+                valueMatchThresh.innerText = defaults.match_thresh.toFixed(2);
+                valueTrackBuffer.innerText = defaults.track_buffer;
+
+                updateTrackerConfig();
+            });
         }
     </script>
 

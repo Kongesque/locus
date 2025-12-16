@@ -3,7 +3,7 @@ from core.detector import detection
 from utils.db import update_job
 from utils.file_handler import clear_all_uploads
 
-def run_processing_pipeline(taskID, job, zones, confidence, model='yolo11n.pt'):
+def run_processing_pipeline(taskID, job, zones, confidence, model='yolo11n.pt', tracker_config=None):
     """
     Run video processing pipeline with multiple zones.
     
@@ -12,7 +12,18 @@ def run_processing_pipeline(taskID, job, zones, confidence, model='yolo11n.pt'):
         job: Job data from database
         zones: List of zone objects [{id, points, classId, color}, ...]
         confidence: Detection confidence threshold (1-100)
+        model: YOLO model name
+        tracker_config: ByteTrack configuration dict
     """
+    # Default tracker config if not provided
+    if tracker_config is None:
+        tracker_config = {
+            'track_high_thresh': 0.45,
+            'track_low_thresh': 0.1,
+            'match_thresh': 0.8,
+            'track_buffer': 30
+        }
+    
     start_time = time.time()
     
     last_progress = 0
@@ -24,7 +35,8 @@ def run_processing_pipeline(taskID, job, zones, confidence, model='yolo11n.pt'):
         (job['frame_width'], job['frame_height']), 
         taskID, 
         confidence,
-        model
+        model,
+        tracker_config
     ):
         final_detection_events = detection_events
         # Update progress in DB every 5% to avoid too many writes
@@ -39,4 +51,3 @@ def run_processing_pipeline(taskID, job, zones, confidence, model='yolo11n.pt'):
     
 
     clear_all_uploads()  # Remove all frames in frames folder
-

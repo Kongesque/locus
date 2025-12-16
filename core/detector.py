@@ -1,4 +1,5 @@
 import cv2
+import os
 from collections import defaultdict
 
 from ultralytics import YOLO
@@ -57,7 +58,7 @@ def check_line_crossing(prev_pos, curr_pos, line_start, line_end):
     return ccw(A, C, D) != ccw(B, C, D) and ccw(A, B, C) != ccw(A, B, D)
 
 
-def detection(path_x, zones, frame_size, taskID, conf=40, model_name='yolo11n.pt'):
+def detection(path_x, zones, frame_size, taskID, conf=40, model_name='yolo11n.pt', tracker_config=None):
     """
     Process video with multiple detection zones.
     
@@ -68,7 +69,33 @@ def detection(path_x, zones, frame_size, taskID, conf=40, model_name='yolo11n.pt
         taskID: Task identifier for output file naming
         conf: Confidence threshold (1-100)
         model_name: Name of the YOLO model file (default: yolo11n.pt)
+        tracker_config: ByteTrack configuration dict
     """
+    # Default tracker config
+    if tracker_config is None:
+        tracker_config = {
+            'track_high_thresh': 0.45,
+            'track_low_thresh': 0.1,
+            'match_thresh': 0.8,
+            'track_buffer': 30
+        }
+    
+    # Generate custom ByteTrack YAML
+    tracker_yaml_path = f'uploads/outputs/bytetrack_{taskID}.yaml'
+    os.makedirs(os.path.dirname(tracker_yaml_path), exist_ok=True)
+    
+    tracker_yaml_content = f"""# Custom ByteTrack config for task {taskID}
+tracker_type: bytetrack
+track_high_thresh: {tracker_config.get('track_high_thresh', 0.45)}
+track_low_thresh: {tracker_config.get('track_low_thresh', 0.1)}
+new_track_thresh: {tracker_config.get('track_high_thresh', 0.45)}
+track_buffer: {int(tracker_config.get('track_buffer', 30))}
+match_thresh: {tracker_config.get('match_thresh', 0.8)}
+fuse_score: True
+"""
+    with open(tracker_yaml_path, 'w') as f:
+        f.write(tracker_yaml_content)
+    
     # Constants
     SOURCE_VIDEO = path_x
     DESTIN_VIDEO = 'uploads/outputs/' + 'output_' + taskID + '.mp4'
@@ -94,12 +121,10 @@ def detection(path_x, zones, frame_size, taskID, conf=40, model_name='yolo11n.pt
     model_path = f"weights/{model_name}"
     
     # Check if model exists in weights folder
-    import os
     if not os.path.exists(model_path):
         print(f"Model {model_name} not found in weights/. Attempting auto-download...")
         try:
             # Download to current directory (default YOLO behavior)
-            from ultralytics import YOLO
             temp_model = YOLO(model_name) 
             
             # Move to weights folder
@@ -193,7 +218,7 @@ def detection(path_x, zones, frame_size, taskID, conf=40, model_name='yolo11n.pt
 
         # Normalize confidence to 0.0-1.0 range
         conf_float = conf / 100.0
-        results = model.track(frame, classes=ClassIDs, persist=True, save=False, tracker="bytetrack.yaml", conf=conf_float)
+        results = model.track(frame, classes=ClassIDs, persist=True, save=False, tracker=tracker_yaml_path, conf=conf_float)
         boxes = results[0].boxes.xywh.cpu()
         track_ids = results[0].boxes.id.int().cpu().tolist() if results[0].boxes is not None and results[0].boxes.id is not None else []
         detected_classes = results[0].boxes.cls.int().cpu().tolist() if results[0].boxes is not None else []
