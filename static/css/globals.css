@@ -124,7 +124,7 @@
 
 @layer components {
     .btn-primary {
-        @apply px-4 py-2 bg-btn-bg text-text-color border border-btn-border rounded-md text-sm font-medium transition-all duration-200;
+        @apply px-4 py-2 bg-btn-bg text-text-color border border-btn-border rounded-md text-sm font-medium transition-all duration-200 cursor-pointer;
     }
 
     .btn-primary:hover {

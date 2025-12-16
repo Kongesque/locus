@@ -1,4 +1,5 @@
 import sqlite3
+import os
 import json
 
 DB_PATH = 'instance/tasks.db'
@@ -9,6 +10,9 @@ def get_db():
     return conn
 
 def init_db():
+    # Ensure instance directory exists
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    
     conn = get_db()
     conn.execute('''
         CREATE TABLE IF NOT EXISTS jobs (

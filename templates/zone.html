@@ -27,7 +27,7 @@
         </a>
         <div class="flex items-center gap-2">
             <button onclick="toggleTheme()"
-                class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-btn-hover transition-colors text-text-color"
+                class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-btn-hover transition-colors text-text-color cursor-pointer"
                 title="Toggle Theme">
                 <!-- Sun Icon (for Dark Mode) -->
                 <svg class="block light:hidden w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -53,7 +53,7 @@
         </div>
     </header>
 
-    <main id="content" class="flex-1 flex items-center justify-center p-4 md:p-6 overflow-hidden">
+    <main id="content" class="flex-1 flex items-center justify-center p-3 overflow-hidden">
         <div class="flex flex-col md:flex-row w-full h-full gap-4 md:gap-6">
 
             <!-- Tools Sidebar -->
@@ -69,7 +69,7 @@
                                 <span class="text-secondary-text">Target Object</span>
                             </div>
                             <select id="classSelector"
-                                class="w-full bg-btn-bg text-text-color border border-btn-border rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500 appearance-none">
+                                class="w-full bg-btn-bg text-text-color border border-btn-border rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500 appearance-none cursor-pointer">
                                 {% for id, name in coco_classes|dictsort(false, 'value') %}
                                 <option value="{{ id }}" {% if id==19 %}selected{% endif %}>{{ name|capitalize }}
                                 </option>
@@ -84,7 +84,7 @@
                                 <span class="value-confidence text-text-color font-medium">40%</span>
                             </div>
                             <input type="range" id="confidenceSlider" value="40" min="1" max="100"
-                                class="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-white">
+                                class="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-text-color">
                         </div>
 
                         <!-- Points Slider -->
@@ -94,7 +94,7 @@
                                 <span class="value text-text-color font-medium">4</span>
                             </div>
                             <input type="range" value="4" min="3" max="8"
-                                class="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-white">
+                                class="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-text-color">
                         </div>
 
                         <hr class="border-primary-border">
@@ -115,7 +115,7 @@
 
                         <!-- Clear Button -->
                         <button
-                            class="draw w-full py-2.5 md:py-2 text-sm text-secondary-text border border-dashed border-btn-border rounded-lg hover:border-text-color hover:text-text-color transition-all">Clear</button>
+                            class="draw w-full py-2.5 md:py-2 text-sm text-secondary-text border border-dashed border-btn-border rounded-lg hover:border-text-color hover:text-text-color transition-all cursor-pointer">Clear</button>
                     </div>
                 </div>
 

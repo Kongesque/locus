@@ -45,3 +45,5 @@ static/files/frame/*
 !input.mp4
 
 /node_modules
+uploads/
+instance/tasks.db
