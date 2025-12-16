@@ -47,3 +47,5 @@ static/files/frame/*
 /node_modules
 uploads/
 instance/tasks.db
+weights/*.pt
+!weights/.gitkeep
