@@ -53,7 +53,7 @@ cd zonenet
 docker-compose up --build
 ```
 
-Open `http://localhost:5000` — that's it!
+Open `http://127.0.0.1:5000` — that's it!
 
 <details>
 <summary><strong>🎮 GPU Acceleration (Optional)</strong></summary>
