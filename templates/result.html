@@ -188,9 +188,12 @@
             const dwell = dwellStats[zoneId];
             const avgDwell = dwell && dwell.count > 0 ? (dwell.total / dwell.count).toFixed(1) : '—';
 
-            if (isLineZone && lineStats) {
+            if (isLineZone) {
                 // Line zone: show IN/OUT/NET
-                const netCount = (lineStats.in || 0) - (lineStats.out || 0);
+                // Default stats to 0 if undefined
+                const stats = lineStats || { in: 0, out: 0 };
+                const netCount = (stats.in || 0) - (stats.out || 0);
+
                 html += `
                     <div class="p-3 bg-primary-color rounded-lg border border-primary-border">
                         <div class="flex items-center gap-2 mb-2">
@@ -200,11 +203,11 @@
                         </div>
                         <div class="grid grid-cols-3 gap-2 text-center text-xs">
                             <div>
-                                <div class="text-lg font-bold text-green-500">${lineStats.in || 0}</div>
+                                <div class="text-lg font-bold text-green-500">${stats.in || 0}</div>
                                 <div class="text-muted-foreground">IN →</div>
                             </div>
                             <div>
-                                <div class="text-lg font-bold text-red-500">${lineStats.out || 0}</div>
+                                <div class="text-lg font-bold text-red-500">${stats.out || 0}</div>
                                 <div class="text-muted-foreground">← OUT</div>
                             </div>
                             <div>
@@ -216,6 +219,8 @@
                 `;
             } else {
                 // Polygon zone: show Total/Peak/Rate/Dwell
+                // Ensure stats exist even if empty
+                const safeStats = stats || { total: 0, peak: 0, avgPerMinute: 0 };
                 html += `
                     <div class="p-3 bg-primary-color rounded-lg border border-primary-border">
                         <div class="flex items-center gap-2 mb-2">
@@ -224,15 +229,15 @@
                         </div>
                         <div class="grid grid-cols-4 gap-2 text-center text-xs">
                             <div>
-                                <div class="text-lg font-bold text-dropzone-accent">${stats.total}</div>
+                                <div class="text-lg font-bold text-dropzone-accent">${safeStats.total}</div>
                                 <div class="text-muted-foreground">Total</div>
                             </div>
                             <div>
-                                <div class="text-lg font-bold text-text-color">${stats.peak}</div>
+                                <div class="text-lg font-bold text-text-color">${safeStats.peak}</div>
                                 <div class="text-muted-foreground">Peak</div>
                             </div>
                             <div>
-                                <div class="text-lg font-bold text-text-color">${stats.avgPerMinute}</div>
+                                <div class="text-lg font-bold text-text-color">${safeStats.avgPerMinute}</div>
                                 <div class="text-muted-foreground">/min</div>
                             </div>
                             <div>
