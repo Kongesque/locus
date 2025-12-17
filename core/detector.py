@@ -8,6 +8,8 @@ import colorsys
 import time
 import numpy as np
 
+from utils.gpu_utils import get_device, get_gpu_info
+
 def get_color_from_class_id(class_id):
     """
     Generate a distinct color based on class ID using Golden Angle Approximation.
@@ -153,6 +155,11 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
             model = YOLO('weights/yolo11n.pt')
     else:
         model = YOLO(model_path)
+    
+    # Set device for GPU acceleration
+    device = get_device()
+    gpu_info = get_gpu_info()
+    print(f"Using device: {device} ({gpu_info['name']})")
 
     cap = cv2.VideoCapture(SOURCE_VIDEO)
 
@@ -231,7 +238,7 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
 
         # Normalize confidence to 0.0-1.0 range
         conf_float = conf / 100.0
-        results = model.track(frame, classes=ClassIDs, persist=True, save=False, tracker=tracker_yaml_path, conf=conf_float)
+        results = model.track(frame, classes=ClassIDs, persist=True, save=False, tracker=tracker_yaml_path, conf=conf_float, device=device)
         boxes = results[0].boxes.xywh.cpu()
         track_ids = results[0].boxes.id.int().cpu().tolist() if results[0].boxes is not None and results[0].boxes.id is not None else []
         detected_classes = results[0].boxes.cls.int().cpu().tolist() if results[0].boxes is not None else []

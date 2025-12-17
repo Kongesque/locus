@@ -35,6 +35,11 @@
             <div class="text-lg font-semibold text-text-color tracking-tight font-mono">ZoneNet</div>
         </a>
         <div class="flex items-center gap-2">
+            <!-- GPU/CPU Status Badge -->
+            <div id="device-badge" class="hidden px-2 py-0.5 text-xs font-medium rounded-full cursor-default"
+                title="Compute Device">
+                <span id="device-text">CPU</span>
+            </div>
             <button onclick="toggleTheme()"
                 class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-btn-hover transition-colors text-text-color cursor-pointer"
                 title="Toggle Theme">
@@ -90,6 +95,26 @@
     <script>
         $(document).ready(function () {
             $('#loading').hide();
+
+            // Fetch GPU status and update badge
+            fetch('/api/system-info')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('device-badge');
+                    const text = document.getElementById('device-text');
+                    if (badge && text && data.gpu) {
+                        const isGpu = data.gpu.available;
+                        text.textContent = isGpu ? 'GPU' : 'CPU';
+                        badge.title = data.gpu.name || 'Compute Device';
+                        badge.classList.remove('hidden');
+                        if (isGpu) {
+                            badge.classList.add('bg-green-500/20', 'text-green-400');
+                        } else {
+                            badge.classList.add('bg-gray-500/20', 'text-gray-400');
+                        }
+                    }
+                })
+                .catch(() => {/* Silently fail - badge stays hidden */ });
         });
 
         function loading() {

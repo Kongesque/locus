@@ -1,0 +1,36 @@
+services:
+  zonenet:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      # Persist uploads and processed outputs
+      - ./uploads:/app/uploads
+      # Persist YOLO model weights (auto-downloaded)
+      - ./weights:/app/weights
+      # Persist task database
+      - ./instance:/app/instance
+    environment:
+      - FLASK_ENV=production
+    restart: unless-stopped
+
+  # GPU-enabled version (uncomment to use)
+  # Requires: NVIDIA GPU + nvidia-container-toolkit
+  # zonenet-gpu:
+  #   build: .
+  #   ports:
+  #     - "5000:5000"
+  #   volumes:
+  #     - ./uploads:/app/uploads
+  #     - ./weights:/app/weights
+  #     - ./instance:/app/instance
+  #   environment:
+  #     - FLASK_ENV=production
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
+  #   restart: unless-stopped

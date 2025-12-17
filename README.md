@@ -42,7 +42,36 @@ ZoneNet is a professional-grade **Computer Vision** application designed for pre
 - **Frontend**: Tailwind CSS v4, Jinja2, Vanilla JS
 - **Package Management**: [uv](https://github.com/astral-sh/uv) (Python), npm (CSS)
 
-## 📦 Installation
+## 🐳 Docker Quick Start
+
+The fastest way to run ZoneNet. Requires [Docker](https://docs.docker.com/get-docker/).
+
+```bash
+# Clone and run
+git clone https://github.com/Kongesque/zonenet.git
+cd zonenet
+docker-compose up --build
+```
+
+Open `http://localhost:5000` — that's it!
+
+<details>
+<summary><strong>🎮 GPU Acceleration (Optional)</strong></summary>
+
+For **NVIDIA GPU** users with [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html):
+
+1. Edit `docker-compose.yml` and uncomment the `zonenet-gpu` service
+2. Comment out the default `zonenet` service
+3. Run with: `docker-compose up --build`
+
+ZoneNet auto-detects GPU availability. Check the badge in the header (green = GPU, gray = CPU).
+
+*Apple Silicon users: GPU acceleration (MPS) works automatically with native install.*
+</details>
+
+---
+
+## 📦 Installation (Manual)
 
 This project uses `uv` for lightning-fast Python dependency management and `npm` for styling.
 

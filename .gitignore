@@ -49,3 +49,5 @@ uploads/
 instance/tasks.db
 weights/*.pt
 !weights/.gitkeep
+
+ROADMAP.md

@@ -12,6 +12,7 @@ from core.live_detector import live_detection, stop_live_stream, get_stream_coun
 import cv2
 from utils.db import init_db, get_job, update_job, get_all_jobs, delete_job
 from utils.coco_classes import COCO_CLASSES
+from utils.gpu_utils import get_gpu_info
 
 init_db()
 
@@ -426,6 +427,15 @@ def test_camera_connection():
             return jsonify({'success': False, 'error': 'Could not read frame from stream'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/system-info')
+def system_info():
+    """Get system information including GPU status."""
+    gpu_info = get_gpu_info()
+    return jsonify({
+        'gpu': gpu_info,
+        'version': '0.1.0'
+    })
 
 if __name__ == "__main__":
     app.run(debug=True, threaded=True)
