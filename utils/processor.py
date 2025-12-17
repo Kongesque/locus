@@ -28,8 +28,9 @@ def run_processing_pipeline(taskID, job, zones, confidence, model='yolo11n.pt', 
     
     last_progress = 0
     final_detection_events = []
+    final_dwell_events = []
     
-    for frame, progress, detection_events in detection(
+    for frame, progress, detection_events, dwell_events in detection(
         job['video_path'], 
         zones,
         (job['frame_width'], job['frame_height']), 
@@ -39,6 +40,7 @@ def run_processing_pipeline(taskID, job, zones, confidence, model='yolo11n.pt', 
         tracker_config
     ):
         final_detection_events = detection_events
+        final_dwell_events = dwell_events
         # Update progress in DB every 5% to avoid too many writes
         if progress >= last_progress + 5 or progress == 100:
             update_job(taskID, progress=progress)
@@ -47,7 +49,8 @@ def run_processing_pipeline(taskID, job, zones, confidence, model='yolo11n.pt', 
     end_time = time.time()
     process_time = round(end_time - start_time, 2)
     
-    update_job(taskID, process_time=process_time, status='completed', detection_data=final_detection_events)
+    update_job(taskID, process_time=process_time, status='completed', 
+               detection_data=final_detection_events, dwell_data=final_dwell_events)
     
 
     clear_all_uploads()  # Remove all frames in frames folder

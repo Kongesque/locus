@@ -155,8 +155,10 @@ def result():
     process_time = job.get('process_time', 0)
     detection_data = job.get('detection_data', [])
     zones = job.get('zones', [])
+    dwell_data = job.get('dwell_data', [])
     
-    return render_template('result.html', form=form, taskID=taskID, width=width, height=height, process_time=process_time, detection_data=detection_data, zones=zones)
+    return render_template('result.html', form=form, taskID=taskID, width=width, height=height, 
+                          process_time=process_time, detection_data=detection_data, zones=zones, dwell_data=dwell_data)
 
 @app.route('/update_zones', methods=['POST'])
 def update_zones():

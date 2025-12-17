@@ -17,8 +17,13 @@ ZoneNet is a professional-grade **Computer Vision** application designed for pre
 - **Accurate Tracking**: Uses **ByteTrack** for robust object tracking and consistency.
 - **Real-time Detection**: Powered by the state-of-the-art **YOLO11** model for low-latency processing.
 - **Live Camera Support 📹**: Connect to RTSP streams or webcams for real-time monitoring and counting.
-- **Real-time Analytics 📊**: View object counting trends over time with interactive charts for actionable insights.
-- **Data Export 💾**: Download your detection data as CSV for offline analysis and reporting.
+- **Advanced Analytics 📊**: 
+  - Rolling time-series charts with peak detection markers
+  - Rate-of-change indicators (objects/min)
+  - **Alert Thresholds**: Visual + audio alerts when counts exceed set limits
+  - **Dwell Time Analysis**: Track how long objects remain in zones
+  - **Activity Heatmaps**: Visualize busy periods with color-coded intensity
+- **Data Export 💾**: Download detection data as **CSV** or **JSON** (includes computed statistics).
 - **History & Management**: Automatically saves processed jobs. Rename or delete past tasks easily.
 - **Privacy-First**: All processing happens locally on your machine. No video data is sent to the cloud.
 

@@ -38,6 +38,14 @@
                 </div>
             </div>
 
+            <!-- Activity Heatmap -->
+            <div class="w-full bg-secondary-bg rounded-xl p-4 shadow-sm border border-primary-border">
+                <h3 class="text-text-color font-semibold text-lg mb-3">Activity Over Time</h3>
+                <div class="h-32">
+                    <canvas id="heatmapChart"></canvas>
+                </div>
+            </div>
+
             <!-- Export Options -->
             <div class="w-full bg-secondary-bg rounded-xl p-4 shadow-sm border border-primary-border">
                 <h3 class="text-text-color font-semibold text-lg mb-3">Export Data</h3>
@@ -89,9 +97,13 @@
 <script id="zones-data" type="application/json">
     {{ zones | tojson }}
 </script>
+<script id="dwell-data" type="application/json">
+    {{ dwell_data | tojson }}
+</script>
 <script>
     const detectionData = JSON.parse(document.getElementById('detection-data').textContent);
     const zonesData = JSON.parse(document.getElementById('zones-data').textContent) || [];
+    const dwellData = JSON.parse(document.getElementById('dwell-data').textContent) || [];
     const processTime = {{ process_time or 0 }};
 
     // HSL to RGB helper (matches zone.js)
@@ -145,10 +157,23 @@
         return { total, peak: maxCount, peakTime: maxTime, avgPerMinute };
     }
 
-    // Render statistics UI
+    // Render statistics UI with dwell time
     function renderStats(statsMap, zoneColors) {
         const container = document.getElementById('statsContainer');
         if (!container) return;
+
+        // Calculate dwell time stats per zone
+        const dwellStats = {};
+        if (dwellData && dwellData.length > 0) {
+            dwellData.forEach(d => {
+                const zoneId = d.zone_id;
+                if (!dwellStats[zoneId]) {
+                    dwellStats[zoneId] = { total: 0, count: 0 };
+                }
+                dwellStats[zoneId].total += d.duration;
+                dwellStats[zoneId].count++;
+            });
+        }
 
         let html = '';
         Object.entries(statsMap).forEach(([zoneId, stats], idx) => {
@@ -156,24 +181,32 @@
             const zoneName = zone?.label || `Zone ${idx + 1}`;
             const color = zoneColors[zoneId];
 
+            // Calculate average dwell time
+            const dwell = dwellStats[zoneId];
+            const avgDwell = dwell && dwell.count > 0 ? (dwell.total / dwell.count).toFixed(1) : '—';
+
             html += `
                 <div class="p-3 bg-primary-color rounded-lg border border-primary-border">
                     <div class="flex items-center gap-2 mb-2">
                         <div class="w-3 h-3 rounded-full" style="background-color: ${color}"></div>
                         <span class="text-sm font-medium text-text-color">${zoneName}</span>
                     </div>
-                    <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div class="grid grid-cols-4 gap-2 text-center text-xs">
                         <div>
                             <div class="text-lg font-bold text-dropzone-accent">${stats.total}</div>
                             <div class="text-muted-foreground">Total</div>
                         </div>
                         <div>
                             <div class="text-lg font-bold text-text-color">${stats.peak}</div>
-                            <div class="text-muted-foreground">Peak @ ${stats.peakTime}s</div>
+                            <div class="text-muted-foreground">Peak</div>
                         </div>
                         <div>
                             <div class="text-lg font-bold text-text-color">${stats.avgPerMinute}</div>
                             <div class="text-muted-foreground">/min</div>
+                        </div>
+                        <div>
+                            <div class="text-lg font-bold text-text-color">${avgDwell}</div>
+                            <div class="text-muted-foreground">Dwell(s)</div>
                         </div>
                     </div>
                 </div>
@@ -293,6 +326,74 @@
                 }
             }
         });
+
+        // Create Activity Heatmap (bar chart with time buckets)
+        if (processTime > 0) {
+            const heatmapCtx = document.getElementById('heatmapChart')?.getContext('2d');
+            if (heatmapCtx) {
+                // Create time buckets (10 buckets across the video duration)
+                const numBuckets = Math.min(20, Math.max(5, Math.floor(processTime / 5)));
+                const bucketSize = processTime / numBuckets;
+                const buckets = Array(numBuckets).fill(0);
+
+                // Count events per bucket
+                detectionData.forEach(d => {
+                    const bucketIdx = Math.min(numBuckets - 1, Math.floor(d.time / bucketSize));
+                    buckets[bucketIdx]++;
+                });
+
+                // Find max for color scaling
+                const maxEvents = Math.max(...buckets, 1);
+
+                // Generate gradient colors based on activity
+                const colors = buckets.map(count => {
+                    const intensity = count / maxEvents;
+                    // Green (low) to Yellow to Red (high)
+                    if (intensity < 0.5) {
+                        const g = 200;
+                        const r = Math.floor(intensity * 2 * 255);
+                        return `rgba(${r}, ${g}, 100, 0.8)`;
+                    } else {
+                        const r = 255;
+                        const g = Math.floor((1 - (intensity - 0.5) * 2) * 200);
+                        return `rgba(${r}, ${g}, 100, 0.8)`;
+                    }
+                });
+
+                const bucketLabels = buckets.map((_, i) =>
+                    `${Math.floor(i * bucketSize)}-${Math.floor((i + 1) * bucketSize)}s`
+                );
+
+                new Chart(heatmapCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: bucketLabels,
+                        datasets: [{
+                            label: 'Events',
+                            data: buckets,
+                            backgroundColor: colors,
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#9ca3af', maxRotation: 0, maxTicksLimit: 6 }
+                            },
+                            y: {
+                                grid: { color: 'rgba(55, 65, 81, 0.3)' },
+                                ticks: { color: '#9ca3af', precision: 0 },
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        }
     } else {
         // No data
         document.getElementById('statsContainer').innerHTML =

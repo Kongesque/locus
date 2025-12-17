@@ -87,7 +87,8 @@
                 <h3 class="text-sm font-medium text-text-color mb-4">Live Counts</h3>
                 <div id="zoneCounts" class="space-y-3">
                     {% for zone in zones %}
-                    <div class="p-3 bg-primary-color rounded-lg border border-primary-border">
+                    <div id="zone-card-{{ zone.id }}"
+                        class="p-3 bg-primary-color rounded-lg border border-primary-border transition-all duration-300">
                         <div class="flex items-center justify-between mb-2">
                             <div class="flex items-center gap-2">
                                 <div class="w-3 h-3 rounded-full zone-color-indicator"
@@ -100,8 +101,23 @@
                                 <span id="count-{{ zone.id }}" class="text-2xl font-bold text-dropzone-accent">0</span>
                             </div>
                         </div>
-                        <div class="flex justify-between text-xs text-muted-foreground">
-                            <span>Peak: <span id="peak-{{ zone.id }}" class="text-text-color">0</span></span>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-muted-foreground">Peak: <span id="peak-{{ zone.id }}"
+                                    class="text-text-color">0</span></span>
+                            <div class="flex items-center gap-1">
+                                <span class="text-muted-foreground">Alert at:</span>
+                                <input type="number" id="threshold-{{ zone.id }}"
+                                    class="w-12 px-1 py-0.5 text-xs text-center bg-secondary-bg border border-primary-border rounded text-text-color"
+                                    placeholder="—" min="1" data-zone-id="{{ zone.id }}">
+                                <span id="alert-icon-{{ zone.id }}" class="hidden">
+                                    <svg class="w-4 h-4 text-red-500 animate-pulse" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd"
+                                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                </span>
+                            </div>
                         </div>
                     </div>
                     {% else %}
@@ -154,6 +170,62 @@
             el.style.backgroundColor = `rgb(${color})`;
         }
     });
+
+    // Alert state tracking (to avoid repeated beeps)
+    const alertState = {};
+    let audioContext = null;
+
+    // Play alert beep sound
+    function playAlertBeep() {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+    }
+
+    // Check if count exceeds threshold
+    function checkThreshold(zoneId, count) {
+        const thresholdInput = document.getElementById(`threshold-${zoneId}`);
+        const alertIcon = document.getElementById(`alert-icon-${zoneId}`);
+        const zoneCard = document.getElementById(`zone-card-${zoneId}`);
+
+        if (!thresholdInput || !alertIcon || !zoneCard) return;
+
+        const threshold = parseInt(thresholdInput.value);
+        if (isNaN(threshold) || threshold <= 0) {
+            // No threshold set
+            alertIcon.classList.add('hidden');
+            zoneCard.classList.remove('border-red-500', 'shadow-red-500/30', 'shadow-lg');
+            alertState[zoneId] = false;
+            return;
+        }
+
+        if (count >= threshold) {
+            // Threshold exceeded
+            alertIcon.classList.remove('hidden');
+            zoneCard.classList.add('border-red-500', 'shadow-red-500/30', 'shadow-lg');
+
+            // Play beep only once when first exceeding
+            if (!alertState[zoneId]) {
+                alertState[zoneId] = true;
+                playAlertBeep();
+            }
+        } else {
+            // Below threshold
+            alertIcon.classList.add('hidden');
+            zoneCard.classList.remove('border-red-500', 'shadow-red-500/30', 'shadow-lg');
+            alertState[zoneId] = false;
+        }
+    }
 
     // Initialize Chart.js rolling chart
     function initChart() {
@@ -251,11 +323,14 @@
                         document.getElementById('elapsedTime').textContent = formatTime(data.elapsed);
                     }
 
-                    // Update counts
+                    // Update counts and check thresholds
                     if (data.counts) {
                         for (const [zoneId, count] of Object.entries(data.counts)) {
                             const el = document.getElementById(`count-${zoneId}`);
                             if (el) el.textContent = count;
+
+                            // Check threshold
+                            checkThreshold(zoneId, count);
                         }
                     }
 

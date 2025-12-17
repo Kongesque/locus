@@ -113,11 +113,14 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
     frame_counter = 0
     track_history = defaultdict(lambda: [])
     
-    # Per-zone tracking: {zone_id: {track_id: True}}
+    # Per-zone tracking: {zone_id: {track_id: {'in_zone': True/False, 'entry_time': timestamp}}}
     crossed_objects_per_zone = {z['id']: {} for z in zones}
     
     # Detection events for each zone
     detection_events = []
+    
+    # Dwell time events: [{zone_id, track_id, duration}]
+    dwell_events = []
 
     width = frame_size[0]
     height = frame_size[1]
@@ -271,23 +274,51 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
                     result = cv2.pointPolygonTest(zd['area_np'], ((center_x, center_y)), False)
                     in_zone = result >= 0
 
+                timestamp = round(frame_counter / fps, 2)
+                
                 if in_zone:
                     if track_id not in crossed_objects_per_zone[zone_id]:
-                        crossed_objects_per_zone[zone_id][track_id] = True
-                        # Log event
-                        timestamp = round(frame_counter / fps, 2)
+                        # First entry - track entry time
+                        crossed_objects_per_zone[zone_id][track_id] = {
+                            'in_zone': True,
+                            'entry_time': timestamp,
+                            'counted': True
+                        }
+                        # Log detection event
                         detection_events.append({
                             "time": timestamp,
                             "zone_id": zone_id,
                             "class_id": zd['class_id'],
                             "count": len(crossed_objects_per_zone[zone_id])
                         })
+                    elif not crossed_objects_per_zone[zone_id][track_id].get('in_zone', False):
+                        # Re-entering zone
+                        crossed_objects_per_zone[zone_id][track_id]['in_zone'] = True
+                        crossed_objects_per_zone[zone_id][track_id]['entry_time'] = timestamp
                         
                     cv2.circle(frame, (center_x, center_y), 9, (244, 133, 66), -1) # Blue (Counting) GBR
 
                 else:
-                    if track_id in crossed_objects_per_zone[zone_id] and crossed_objects_per_zone[zone_id][track_id] == True:
-                        cv2.circle(frame, (center_x, center_y), 9, (83, 168, 51), -1) # Green (Counted) GBR
+                    if track_id in crossed_objects_per_zone[zone_id]:
+                        obj_data = crossed_objects_per_zone[zone_id][track_id]
+                        if obj_data.get('in_zone', False):
+                            # Object just exited - calculate dwell time
+                            entry_time = obj_data.get('entry_time', timestamp)
+                            dwell_duration = round(timestamp - entry_time, 2)
+                            if dwell_duration > 0:
+                                dwell_events.append({
+                                    'zone_id': zone_id,
+                                    'track_id': track_id,
+                                    'entry_time': entry_time,
+                                    'exit_time': timestamp,
+                                    'duration': dwell_duration
+                                })
+                            obj_data['in_zone'] = False
+                        
+                        if obj_data.get('counted', False):
+                            cv2.circle(frame, (center_x, center_y), 9, (83, 168, 51), -1) # Green (Counted) GBR
+                        else:
+                            cv2.circle(frame, (center_x, center_y), 9, (54, 67, 234), -1) # Red (Not Counted) GBR
                     else:
                         cv2.circle(frame, (center_x, center_y), 9, (54, 67, 234), -1) # Red (Not Counted) GBR
 
@@ -324,7 +355,7 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
         progress = int((frame_counter / total_frames) * 100) if total_frames > 0 else 0
         
         if success:
-            yield frame, progress, detection_events
+            yield frame, progress, detection_events, dwell_events
         else:
             break
         
