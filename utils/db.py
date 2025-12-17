@@ -44,7 +44,8 @@ def init_db():
         ('tracker_config', 'TEXT'),
         ('source_type', 'TEXT DEFAULT "file"'),
         ('stream_url', 'TEXT'),
-        ('dwell_data', 'TEXT')
+        ('dwell_data', 'TEXT'),
+        ('line_crossing_data', 'TEXT')
     ]
 
     for col_name, col_def in columns_to_add:
@@ -100,6 +101,12 @@ def get_job(task_id):
             job_dict['dwell_data'] = json.loads(job_dict['dwell_data']) if job_dict.get('dwell_data') else []
         except (ValueError, TypeError):
             job_dict['dwell_data'] = []
+        
+        # Parse line_crossing_data JSON
+        try:
+            job_dict['line_crossing_data'] = json.loads(job_dict['line_crossing_data']) if job_dict.get('line_crossing_data') else {}
+        except (ValueError, TypeError):
+            job_dict['line_crossing_data'] = {}
              
         # Ensure target_class is present (for old records)
         if 'target_class' not in job_dict or job_dict['target_class'] is None:
@@ -165,6 +172,8 @@ def update_job(task_id, **kwargs):
         kwargs['tracker_config'] = json.dumps(kwargs['tracker_config'])
     if 'dwell_data' in kwargs:
         kwargs['dwell_data'] = json.dumps(kwargs['dwell_data'])
+    if 'line_crossing_data' in kwargs:
+        kwargs['line_crossing_data'] = json.dumps(kwargs['line_crossing_data'])
 
     columns = ', '.join(f"{key} = ?" for key in kwargs.keys())
     values = list(kwargs.values())

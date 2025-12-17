@@ -157,9 +157,11 @@ def result():
     detection_data = job.get('detection_data', [])
     zones = job.get('zones', [])
     dwell_data = job.get('dwell_data', [])
+    line_crossing_data = job.get('line_crossing_data', {})
     
     return render_template('result.html', form=form, taskID=taskID, width=width, height=height, 
-                          process_time=process_time, detection_data=detection_data, zones=zones, dwell_data=dwell_data)
+                          process_time=process_time, detection_data=detection_data, zones=zones, 
+                          dwell_data=dwell_data, line_crossing_data=line_crossing_data)
 
 @app.route('/update_zones', methods=['POST'])
 def update_zones():

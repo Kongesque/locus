@@ -95,10 +95,14 @@
 <script id="dwell-data" type="application/json">
     {{ dwell_data | tojson }}
 </script>
+<script id="line-crossing-data" type="application/json">
+    {{ line_crossing_data | tojson }}
+</script>
 <script>
     const detectionData = JSON.parse(document.getElementById('detection-data').textContent);
     const zonesData = JSON.parse(document.getElementById('zones-data').textContent) || [];
     const dwellData = JSON.parse(document.getElementById('dwell-data').textContent) || [];
+    const lineCrossingData = JSON.parse(document.getElementById('line-crossing-data').textContent) || {};
     const processTime = {{ process_time or 0 }};
 
     // HSL to RGB helper (matches zone.js)
@@ -176,36 +180,69 @@
             const zoneName = zone?.label || `Zone ${idx + 1}`;
             const color = zoneColors[zoneId];
 
-            // Calculate average dwell time
+            // Check if this is a line zone (2 points)
+            const isLineZone = zone?.points?.length === 2;
+            const lineStats = lineCrossingData[zoneId];
+
+            // Calculate average dwell time (for polygon zones)
             const dwell = dwellStats[zoneId];
             const avgDwell = dwell && dwell.count > 0 ? (dwell.total / dwell.count).toFixed(1) : '—';
 
-            html += `
-                <div class="p-3 bg-primary-color rounded-lg border border-primary-border">
-                    <div class="flex items-center gap-2 mb-2">
-                        <div class="w-3 h-3 rounded-full" style="background-color: ${color}"></div>
-                        <span class="text-sm font-medium text-text-color">${zoneName}</span>
+            if (isLineZone && lineStats) {
+                // Line zone: show IN/OUT/NET
+                const netCount = (lineStats.in || 0) - (lineStats.out || 0);
+                html += `
+                    <div class="p-3 bg-primary-color rounded-lg border border-primary-border">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-3 h-3 rounded-full" style="background-color: ${color}"></div>
+                            <span class="text-sm font-medium text-text-color">${zoneName}</span>
+                            <span class="text-xs text-secondary-text">(Line)</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                            <div>
+                                <div class="text-lg font-bold text-green-500">${lineStats.in || 0}</div>
+                                <div class="text-muted-foreground">IN →</div>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-red-500">${lineStats.out || 0}</div>
+                                <div class="text-muted-foreground">← OUT</div>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-text-color">${netCount}</div>
+                                <div class="text-muted-foreground">NET</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-4 gap-2 text-center text-xs">
-                        <div>
-                            <div class="text-lg font-bold text-dropzone-accent">${stats.total}</div>
-                            <div class="text-muted-foreground">Total</div>
+                `;
+            } else {
+                // Polygon zone: show Total/Peak/Rate/Dwell
+                html += `
+                    <div class="p-3 bg-primary-color rounded-lg border border-primary-border">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-3 h-3 rounded-full" style="background-color: ${color}"></div>
+                            <span class="text-sm font-medium text-text-color">${zoneName}</span>
                         </div>
-                        <div>
-                            <div class="text-lg font-bold text-text-color">${stats.peak}</div>
-                            <div class="text-muted-foreground">Peak</div>
-                        </div>
-                        <div>
-                            <div class="text-lg font-bold text-text-color">${stats.avgPerMinute}</div>
-                            <div class="text-muted-foreground">/min</div>
-                        </div>
-                        <div>
-                            <div class="text-lg font-bold text-text-color">${avgDwell}</div>
-                            <div class="text-muted-foreground">Dwell(s)</div>
+                        <div class="grid grid-cols-4 gap-2 text-center text-xs">
+                            <div>
+                                <div class="text-lg font-bold text-dropzone-accent">${stats.total}</div>
+                                <div class="text-muted-foreground">Total</div>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-text-color">${stats.peak}</div>
+                                <div class="text-muted-foreground">Peak</div>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-text-color">${stats.avgPerMinute}</div>
+                                <div class="text-muted-foreground">/min</div>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-text-color">${avgDwell}</div>
+                                <div class="text-muted-foreground">Dwell(s)</div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
+            }
         });
 
         container.innerHTML = html || '<p class="text-sm text-muted-foreground italic">No data available</p>';

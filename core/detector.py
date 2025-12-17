@@ -50,14 +50,26 @@ def point_to_line_distance(point, line_start, line_end):
 
 
 def check_line_crossing(prev_pos, curr_pos, line_start, line_end):
-    """Check if movement from prev_pos to curr_pos crosses the line segment."""
+    """
+    Check if movement from prev_pos to curr_pos crosses the line segment.
+    Returns: 1 = IN (crossed left-to-right), -1 = OUT (crossed right-to-left), 0 = no crossing
+    """
     def ccw(A, B, C):
         return (C[1] - A[1]) * (B[0] - A[0]) > (B[1] - A[1]) * (C[0] - A[0])
+    
+    def cross_product(o, a, b):
+        """Calculate cross product to determine which side of line a point is on."""
+        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
     
     A, B = prev_pos, curr_pos
     C, D = line_start, line_end
     
-    return ccw(A, C, D) != ccw(B, C, D) and ccw(A, B, C) != ccw(A, B, D)
+    # Check if line segments intersect
+    if ccw(A, C, D) != ccw(B, C, D) and ccw(A, B, C) != ccw(A, B, D):
+        # Crossed! Determine direction based on which side prev_pos was on
+        cross = cross_product(C, D, A)
+        return 1 if cross > 0 else -1  # 1=IN (left to right), -1=OUT (right to left)
+    return 0
 
 
 def detection(path_x, zones, frame_size, taskID, conf=40, model_name='yolo11n.pt', tracker_config=None):
@@ -123,6 +135,9 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
     
     # Dwell time events: [{zone_id, track_id, duration}]
     dwell_events = []
+    
+    # Line crossing counts: {zone_id: {'in': count, 'out': count}} for line zones
+    line_crossing_counts = {z['id']: {'in': 0, 'out': 0} for z in zones if len(z.get('points', [])) == 2}
 
     width = frame_size[0]
     height = frame_size[1]
@@ -268,6 +283,8 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
                 
                 # Check if object is in zone (different logic for line vs polygon)
                 in_zone = False
+                crossing_direction = 0
+                
                 if zd['is_line']:
                     # For 2-point line: check if object crosses the line
                     if len(track) >= 2:
@@ -275,7 +292,51 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
                         curr_pos = track[-1]
                         line_pt1 = (int(zd['area'][0][0]), int(zd['area'][0][1]))
                         line_pt2 = (int(zd['area'][1][0]), int(zd['area'][1][1]))
-                        in_zone = check_line_crossing(prev_pos, curr_pos, line_pt1, line_pt2)
+                        crossing_direction = check_line_crossing(prev_pos, curr_pos, line_pt1, line_pt2)
+                        
+                        # For line zones, process crossing event
+                        if crossing_direction != 0:
+                            timestamp = round(frame_counter / fps, 2)
+                            
+                            # Check if this track already crossed in this direction
+                            track_data = crossed_objects_per_zone[zone_id].get(track_id, {})
+                            last_direction = track_data.get('last_direction', 0)
+                            
+                            # Only count if this is a new crossing (not same direction as last)
+                            if last_direction != crossing_direction:
+                                crossed_objects_per_zone[zone_id][track_id] = {
+                                    'last_direction': crossing_direction,
+                                    'timestamp': timestamp,
+                                    'counted': True
+                                }
+                                
+                                # Update IN/OUT counts
+                                if crossing_direction > 0:
+                                    line_crossing_counts[zone_id]['in'] += 1
+                                else:
+                                    line_crossing_counts[zone_id]['out'] += 1
+                                
+                                # Log detection event with direction info
+                                lc = line_crossing_counts[zone_id]
+                                detection_events.append({
+                                    "time": timestamp,
+                                    "zone_id": zone_id,
+                                    "class_id": zd['class_id'],
+                                    "count": lc['in'] + lc['out'],
+                                    "in_count": lc['in'],
+                                    "out_count": lc['out'],
+                                    "direction": "in" if crossing_direction > 0 else "out"
+                                })
+                            
+                            # Mark as currently crossing (blue indicator)
+                            cv2.circle(frame, (center_x, center_y), 9, (244, 133, 66), -1)
+                        else:
+                            # Not crossing - show green if previously counted
+                            if track_id in crossed_objects_per_zone[zone_id]:
+                                cv2.circle(frame, (center_x, center_y), 9, (83, 168, 51), -1)
+                            else:
+                                cv2.circle(frame, (center_x, center_y), 9, (54, 67, 234), -1)
+                    continue  # Skip polygon logic for line zones
                 else:
                     # For 3+ point polygon: use standard containment test
                     result = cv2.pointPolygonTest(zd['area_np'], ((center_x, center_y)), False)
@@ -342,12 +403,18 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
         y_offset = int(height * 0.05)
         for idx, zd in enumerate(zone_data):
             zone_id = zd['id']
-            count = len(crossed_objects_per_zone.get(zone_id, {}))
             text_color = get_color_from_class_id(zd['class_id'])
             
             # Zone label with count
             zone_label = zd.get('label', f'Zone {idx + 1}')
-            count_text = f"{zone_label}: {count}"
+            
+            # Different display for line zones vs polygon zones
+            if zd['is_line'] and zone_id in line_crossing_counts:
+                lc = line_crossing_counts[zone_id]
+                count_text = f"{zone_label}: IN {lc['in']} | OUT {lc['out']}"
+            else:
+                count = len(crossed_objects_per_zone.get(zone_id, {}))
+                count_text = f"{zone_label}: {count}"
             
             text_position = (int(width * 0.02), y_offset + int(idx * height * 0.05))
             cv2.putText(frame, count_text, text_position, font, font_scale, text_color, font_thickness)
@@ -362,7 +429,7 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
         progress = int((frame_counter / total_frames) * 100) if total_frames > 0 else 0
         
         if success:
-            yield frame, progress, detection_events, dwell_events
+            yield frame, progress, detection_events, dwell_events, line_crossing_counts
         else:
             break
         

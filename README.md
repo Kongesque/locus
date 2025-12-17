@@ -11,6 +11,7 @@ ZoneNet is a professional-grade **Computer Vision** application designed for pre
 ## 🚀 Features
 
 - **Custom Region of Interest (ROI)**: Draw specific polygons on your video to precision-count objects only within defined areas. Perfect for specific lane counting or zone monitoring.
+- **Line Crossing Counter 🚶**: Draw a 2-point line to track entries and exits with **IN/OUT direction detection**. Perfect for doorway counting, traffic lanes, and occupancy tracking.
 - **Dynamic Object Selection**: Select ANY of the 80 COCO classes (Person, Car, Bicycle, etc.) to track and count. No code changes required!
 - **Model Selection**: Switch between YOLO11 Nano (fastest) to XLarge (most accurate) depending on your needs.
 - **Adjustable Confidence**: Fine-tune detection sensitivity with a built-in confidence threshold slider (Default: 35%).
