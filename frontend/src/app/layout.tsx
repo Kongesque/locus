@@ -23,6 +23,16 @@ export const metadata: Metadata = {
   },
 };
 
+// Script to prevent theme flash on initial load
+const themeScript = `
+  (function() {
+    try {
+      var theme = localStorage.getItem('theme') || 'dark';
+      document.documentElement.classList.add(theme);
+    } catch (e) {}
+  })();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,6 +40,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-sidebar-foreground h-screen overflow-hidden flex flex-col`}
       >

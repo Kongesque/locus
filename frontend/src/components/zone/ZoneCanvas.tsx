@@ -32,7 +32,7 @@ export function ZoneCanvas({
     const containerRef = useRef<HTMLDivElement>(null);
     const [imageLoaded, setImageLoaded] = useState(false);
     const [scale, setScale] = useState(1);
-    const [offset, setOffset] = useState({ x: 0, y: 0 });
+    const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
 
     // Load the frame image
     useEffect(() => {
@@ -55,10 +55,9 @@ export function ZoneCanvas({
         if (!canvas || !container || !img) return;
 
         const containerRect = container.getBoundingClientRect();
-        const containerWidth = containerRect.width - 32; // padding
+        const containerWidth = containerRect.width - 32;
         const containerHeight = containerRect.height - 32;
 
-        // Calculate scale to fit image in container
         const scaleX = containerWidth / img.width;
         const scaleY = containerHeight / img.height;
         const newScale = Math.min(scaleX, scaleY, 1);
@@ -67,10 +66,6 @@ export function ZoneCanvas({
         canvas.height = img.height * newScale;
 
         setScale(newScale);
-        setOffset({
-            x: (containerWidth - canvas.width) / 2,
-            y: (containerHeight - canvas.height) / 2,
-        });
     }, []);
 
     useEffect(() => {
@@ -81,8 +76,8 @@ export function ZoneCanvas({
         }
     }, [imageLoaded, updateCanvasSize]);
 
-    // Draw canvas content
-    useEffect(() => {
+    // Draw canvas content with preview line
+    const drawCanvas = useCallback(() => {
         const canvas = canvasRef.current;
         const ctx = canvas?.getContext("2d");
         const img = imageRef.current;
@@ -102,33 +97,33 @@ export function ZoneCanvas({
             const isActive = zone.id === activeZoneId;
             const color = getColorFromClassId(zone.classId);
 
-            ctx.strokeStyle = color;
-            ctx.lineWidth = isActive ? 3 : 2;
-
             // Scale points
             const scaledPoints = zone.points.map((p) => ({
                 x: p.x * scale,
                 y: p.y * scale,
             }));
 
-            if (zone.points.length === 2) {
-                // Draw line for 2-point zones
-                ctx.beginPath();
-                ctx.moveTo(scaledPoints[0].x, scaledPoints[0].y);
-                ctx.lineTo(scaledPoints[1].x, scaledPoints[1].y);
-                ctx.stroke();
-            } else if (zone.points.length >= 3) {
-                // Draw polygon
-                ctx.beginPath();
-                ctx.moveTo(scaledPoints[0].x, scaledPoints[0].y);
-                for (let i = 1; i < scaledPoints.length; i++) {
-                    ctx.lineTo(scaledPoints[i].x, scaledPoints[i].y);
-                }
-                ctx.closePath();
-                ctx.stroke();
+            // Draw lines between points
+            ctx.strokeStyle = color;
+            ctx.lineWidth = isActive ? 4 : 3;
+            ctx.setLineDash([]);
 
-                // Fill with semi-transparent color
-                ctx.fillStyle = color.replace(")", ", 0.1)").replace("hsl", "hsla");
+            ctx.beginPath();
+            ctx.moveTo(scaledPoints[0].x, scaledPoints[0].y);
+
+            for (let i = 1; i < scaledPoints.length; i++) {
+                ctx.lineTo(scaledPoints[i].x, scaledPoints[i].y);
+            }
+
+            // Close polygon if complete
+            if (zone.points.length >= maxPoints) {
+                ctx.closePath();
+            }
+            ctx.stroke();
+
+            // Fill with semi-transparent color for complete polygons
+            if (zone.points.length >= maxPoints && zone.points.length > 2) {
+                ctx.fillStyle = color.replace(")", ", 0.15)").replace("hsl", "hsla");
                 ctx.fill();
             }
 
@@ -159,7 +154,36 @@ export function ZoneCanvas({
                 ctx.fillText(zone.label, labelPoint.x + 12, labelPoint.y - 8);
             }
         });
-    }, [zones, activeZoneId, scale, imageLoaded]);
+
+        // Draw preview line following mouse for active zone
+        const activeZone = zones.find((z) => z.id === activeZoneId);
+        if (activeZone && activeZone.points.length > 0 && activeZone.points.length < maxPoints && mousePos) {
+            const color = getColorFromClassId(activeZone.classId);
+            const scaledPoints = activeZone.points.map((p) => ({
+                x: p.x * scale,
+                y: p.y * scale,
+            }));
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+
+            ctx.beginPath();
+            ctx.moveTo(scaledPoints[0].x, scaledPoints[0].y);
+            for (let i = 1; i < scaledPoints.length; i++) {
+                ctx.lineTo(scaledPoints[i].x, scaledPoints[i].y);
+            }
+            ctx.lineTo(mousePos.x * scale, mousePos.y * scale);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+    }, [zones, activeZoneId, scale, imageLoaded, mousePos, maxPoints]);
+
+    // Redraw on changes
+    useEffect(() => {
+        drawCanvas();
+    }, [drawCanvas]);
 
     // Handle canvas click
     const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -172,16 +196,30 @@ export function ZoneCanvas({
         const x = (e.clientX - rect.left) / scale;
         const y = (e.clientY - rect.top) / scale;
 
-        // Find active zone
         const activeZone = zones.find((z) => z.id === activeZoneId);
         if (!activeZone) return;
 
-        // Check if we can add more points
         if (activeZone.points.length >= maxPoints) return;
 
-        // Add point to active zone
         const newPoint = { x: Math.round(x), y: Math.round(y) };
         onPointAdded(activeZoneId, newPoint);
+    };
+
+    // Handle mouse move for preview line
+    const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / scale;
+        const y = (e.clientY - rect.top) / scale;
+
+        setMousePos({ x, y });
+    };
+
+    // Handle mouse leave
+    const handleMouseLeave = () => {
+        setMousePos(null);
     };
 
     // Handle right-click to remove last point
@@ -218,6 +256,8 @@ export function ZoneCanvas({
             <canvas
                 ref={canvasRef}
                 onClick={handleCanvasClick}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
                 onContextMenu={handleContextMenu}
                 className="rounded-lg cursor-crosshair"
                 style={{ maxWidth: "100%", maxHeight: "100%" }}

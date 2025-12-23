@@ -106,8 +106,8 @@ export function ZoneSidebar({
                         <div
                             key={zone.id}
                             className={`p-3 rounded-lg border cursor-pointer transition-all ${activeZoneId === zone.id
-                                    ? "border-text-color bg-sidebar-item-hover"
-                                    : "border-btn-border hover:border-gray-400"
+                                ? "border-text-color bg-sidebar-item-hover"
+                                : "border-btn-border hover:border-gray-400"
                                 }`}
                             onClick={() => onZoneSelect(zone.id)}
                         >
@@ -146,11 +146,13 @@ export function ZoneSidebar({
                                     onClick={(e) => e.stopPropagation()}
                                     className="flex-1 bg-btn-bg text-text-color text-xs border border-btn-border rounded px-2 py-1"
                                 >
-                                    {Object.entries(COCO_CLASSES).map(([id, name]) => (
-                                        <option key={id} value={id}>
-                                            {name}
-                                        </option>
-                                    ))}
+                                    {Object.entries(COCO_CLASSES)
+                                        .sort((a, b) => a[1].localeCompare(b[1]))
+                                        .map(([id, name]) => (
+                                            <option key={id} value={id}>
+                                                {name.charAt(0).toUpperCase() + name.slice(1)}
+                                            </option>
+                                        ))}
                                 </select>
                             </div>
 
@@ -352,8 +354,8 @@ export function ZoneSidebar({
                 onClick={onProcess}
                 disabled={!canProcess || isProcessing}
                 className={`w-full py-3 rounded-md text-sm font-medium transition-all ${canProcess && !isProcessing
-                        ? "btn-primary"
-                        : "bg-gray-500 text-gray-300 cursor-not-allowed"
+                    ? "btn-primary"
+                    : "bg-gray-500 text-gray-300 cursor-not-allowed"
                     }`}
             >
                 {isProcessing ? "Processing..." : "Process"}

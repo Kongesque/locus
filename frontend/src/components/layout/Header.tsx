@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useTheme } from "next-themes";
 import { Sun, Moon } from "lucide-react";
 import { api } from "@/utils/api";
 
@@ -10,22 +11,15 @@ interface HeaderProps {
 }
 
 export function Header({ children }: HeaderProps) {
-    const [theme, setTheme] = useState<"dark" | "light">("dark");
+    const { theme, setTheme, resolvedTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
     const [gpuInfo, setGpuInfo] = useState<{
         available: boolean;
         name: string;
     } | null>(null);
 
     useEffect(() => {
-        // Check for saved theme preference
-        const savedTheme = localStorage.getItem("theme");
-        if (
-            savedTheme === "light" ||
-            (!savedTheme && window.matchMedia("(prefers-color-scheme: light)").matches)
-        ) {
-            setTheme("light");
-            document.documentElement.classList.add("light");
-        }
+        setMounted(true);
 
         // Fetch GPU status
         api
@@ -39,15 +33,32 @@ export function Header({ children }: HeaderProps) {
     }, []);
 
     const toggleTheme = () => {
-        if (theme === "dark") {
-            setTheme("light");
-            document.documentElement.classList.add("light");
-            localStorage.setItem("theme", "light");
-        } else {
-            setTheme("dark");
-            document.documentElement.classList.remove("light");
-            localStorage.setItem("theme", "dark");
+        setTheme(resolvedTheme === "dark" ? "light" : "dark");
+    };
+
+    // Avoid hydration mismatch - don't render theme button until mounted
+    const renderThemeButton = () => {
+        if (!mounted) {
+            return (
+                <div className="w-8 h-8 flex items-center justify-center rounded-md">
+                    <div className="w-5 h-5" />
+                </div>
+            );
         }
+
+        return (
+            <button
+                onClick={toggleTheme}
+                className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-btn-hover transition-colors text-text-color cursor-pointer"
+                title="Toggle Theme"
+            >
+                {resolvedTheme === "dark" ? (
+                    <Sun className="w-5 h-5" />
+                ) : (
+                    <Moon className="w-5 h-5" />
+                )}
+            </button>
+        );
     };
 
     return (
@@ -72,17 +83,7 @@ export function Header({ children }: HeaderProps) {
                 )}
 
                 {/* Theme Toggle */}
-                <button
-                    onClick={toggleTheme}
-                    className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-btn-hover transition-colors text-text-color cursor-pointer"
-                    title="Toggle Theme"
-                >
-                    {theme === "dark" ? (
-                        <Sun className="w-5 h-5" />
-                    ) : (
-                        <Moon className="w-5 h-5" />
-                    )}
-                </button>
+                {renderThemeButton()}
 
                 {/* Additional header actions */}
                 {children}
