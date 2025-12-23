@@ -53,7 +53,7 @@ export function BentoCard({
             <div className="relative z-20 flex-1 w-full h-full overflow-hidden flex flex-col">
                 <div className={`flex-1 w-full h-full ${noScroll ? 'overflow-hidden' : 'overflow-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent'}`}>
                     {/* Spacer to prevent content from starting under the header (unless disabled) */}
-                    {(!noSpacer && (title || icon)) && <div className="h-12 w-full shrink-0" />}
+                    {(!noSpacer && (title || icon)) && <div className="h-10 w-full shrink-0" />}
                     {children}
                 </div>
             </div>

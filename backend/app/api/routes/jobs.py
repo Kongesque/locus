@@ -172,15 +172,65 @@ async def export_data(task_id: str, format: str = "json"):
     if format == "csv":
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow(["Timestamp (s)", "Zone ID", "Class ID", "Count"])
+        
+        # 1. Identify all zones
+        # Use zones from job definition to ensure we have labels, plus any seen in data
+        job_zones = job.get("zones", [])
+        zone_ids = [z["id"] for z in job_zones]
+        zone_labels = {z["id"]: z.get("label", z["id"]) for z in job_zones}
+        
+        # Also include any zone_ids found in data but not in config (just in case)
+        data_zone_ids = set(e.get("zone_id") for e in detection_data if e.get("zone_id"))
+        for zid in data_zone_ids:
+            if zid not in zone_ids:
+                zone_ids.append(zid)
+                zone_labels[zid] = zid
+        
+        # Header: Timestamp, then each Zone's Label
+        header = ["Timestamp (s)"] + [zone_labels[zid] for zid in zone_ids]
+        writer.writerow(header)
+        
+        # 2. Aggregate data by time
+        # Struct: time_data[seconds][zone_id] = count
+        time_data = {}
+        max_time = 0
         
         for event in detection_data:
-            writer.writerow([
-                event.get("time", 0),
-                event.get("zone_id", "default"),
-                event.get("class_id", 0),
-                event.get("count", 0)
-            ])
+            t = int(event.get("time", 0))
+            z = event.get("zone_id")
+            c = event.get("count", 0)
+            
+            if t > max_time:
+                max_time = t
+                
+            if t not in time_data:
+                time_data[t] = {}
+            
+            # Assuming 'count' in event is the total count at that time
+            # If multiple events for same zone same time, take the latest (or max?)
+            # Usually detection_data is a sequence of updates.
+            time_data[t][z] = c
+
+        # 3. Write rows for every second
+        # If process_time is available, use it as duration, else max_time seen
+        duration = int(job.get("process_time", 0)) or max_time
+        
+        for t in range(duration + 1):
+            row = [t]
+            for zid in zone_ids:
+                # Get count for this zone at this time
+                # If no data for this specific second, carry forward previous value?
+                # Or is '0' correct? 
+                # For "Activity", 0 is correct if no detection.
+                # But if "count" is cumulative unique visitors, we should probably carry forward.
+                # However, previous existing logic seemed to just dump raw events.
+                # Let's write the count if present, else 0 (assuming rate/activity)
+                # OR if it's cumulative, we need to know the semantics.
+                # Looking at frontend ActivityTimeline, it counts events per bucket.
+                # Let's output raw counts per second found in data.
+                val = time_data.get(t, {}).get(zid, 0)
+                row.append(val)
+            writer.writerow(row)
         
         return StreamingResponse(
             iter([output.getvalue()]),

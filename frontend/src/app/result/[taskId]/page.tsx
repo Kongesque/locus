@@ -124,7 +124,7 @@ export default function ResultPage() {
 
                 {/* Zone Statistics - Spans 4 cols, 8 rows (Right Sidebar) */}
                 <BentoCard className="col-span-4 row-span-8" title="Zone Analysis">
-                    <div className="space-y-3 p-4">
+                    <div className="space-y-3 px-4 pb-4 pt-0">
                         {job.zones?.map((zone) => {
                             const stats = zoneStats[zone.id] || { total: 0, peak: 0 };
                             const isLine = zone.points?.length === 2;

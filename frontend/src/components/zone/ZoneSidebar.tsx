@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Trash2, ChevronDown } from "lucide-react";
+import { Plus, Trash2, ChevronDown, Pencil } from "lucide-react";
 import type { Zone } from "@/utils/types";
 import { COCO_CLASSES } from "@/utils/types";
 
@@ -122,8 +122,9 @@ export function ZoneSidebar({
                                         value={zone.label}
                                         onChange={(e) => onZoneLabelChange(zone.id, e.target.value)}
                                         onClick={(e) => e.stopPropagation()}
-                                        className="bg-transparent text-sm text-text-color font-medium border-none outline-none w-24"
+                                        className="bg-transparent text-sm text-text-color font-medium border-none outline-none w-12"
                                     />
+                                    <Pencil className="w-3 h-3 text-secondary-text opacity-50" />
                                 </div>
                                 <button
                                     onClick={(e) => {
