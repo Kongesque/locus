@@ -24,7 +24,14 @@ export function Sidebar({
     const [menuOpen, setMenuOpen] = useState<string | null>(null);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editName, setEditName] = useState("");
+    const [enableTransition, setEnableTransition] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+
+    // Enable transition only after initial render to prevent flash
+    useEffect(() => {
+        const timer = setTimeout(() => setEnableTransition(true), 100);
+        return () => clearTimeout(timer);
+    }, []);
 
     // Close menu when clicking outside
     useEffect(() => {
@@ -79,12 +86,12 @@ export function Sidebar({
 
     return (
         <aside
-            className={`h-full bg-background flex-col overflow-hidden hidden lg:flex transition-all duration-300 ease-in-out ${isOpen ? "w-60" : "w-0"
-                }`}
+            className={`h-full bg-background flex-col overflow-hidden hidden lg:flex ${enableTransition ? "transition-all duration-300 ease-in-out" : ""
+                } ${isOpen ? "w-60" : "w-0"}`}
         >
             <nav
-                className={`flex-1 p-2 space-y-1 overflow-y-auto overflow-x-hidden w-60 transition-opacity duration-200 ${isOpen ? "opacity-100" : "opacity-0"
-                    }`}
+                className={`flex-1 p-2 space-y-1 overflow-y-auto overflow-x-hidden w-60 ${enableTransition ? "transition-opacity duration-200" : ""
+                    } ${isOpen ? "opacity-100" : "opacity-0"}`}
             >
                 {/* Section Header */}
                 <div className="px-2 py-2">

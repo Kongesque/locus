@@ -13,10 +13,12 @@ export default function HomePage() {
   const router = useRouter();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // Load saved sidebar state
+  // Load saved sidebar state after mount to prevent hydration mismatch
   useEffect(() => {
+    setMounted(true);
     const saved = localStorage.getItem("sidebarOpen");
     if (saved !== null) {
       setSidebarOpen(saved === "true");
@@ -82,13 +84,15 @@ export default function HomePage() {
 
   return (
     <>
-      {/* Sidebar */}
-      <Sidebar
-        jobs={jobs}
-        isOpen={sidebarOpen}
-        onJobDeleted={handleJobDeleted}
-        onJobRenamed={handleJobRenamed}
-      />
+      {/* Sidebar - only show after mount to prevent hydration flicker */}
+      {mounted && (
+        <Sidebar
+          jobs={jobs}
+          isOpen={sidebarOpen}
+          onJobDeleted={handleJobDeleted}
+          onJobRenamed={handleJobRenamed}
+        />
+      )}
 
       {/* Main Content */}
       <main className="relative flex-1 flex items-center justify-center flex-col text-center mx-2 mt-0 mb-2 overflow-hidden bg-primary-color border border-primary-border rounded-md">
@@ -113,8 +117,8 @@ export default function HomePage() {
           <div
             {...getRootProps()}
             className={`w-full max-w-6xl py-6 px-16 md:px-64 text-center rounded-xl cursor-pointer transition-all duration-200 bg-dropzone-hover-bg border-[2px] border-dashed ${isDragActive
-                ? "border-dropzone-accent bg-sidebar-item-hover"
-                : "border-dropzone-border hover:border-dropzone-accent"
+              ? "border-dropzone-accent bg-sidebar-item-hover"
+              : "border-dropzone-border hover:border-dropzone-accent"
               } group`}
           >
             <input {...getInputProps()} />
