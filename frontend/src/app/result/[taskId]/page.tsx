@@ -102,7 +102,7 @@ export default function ResultPage() {
     });
 
     return (
-        <main className="h-full w-full overflow-hidden bg-black text-white p-4">
+        <main className="h-full w-full overflow-hidden bg-background text-text-color p-4">
             <BentoGrid className="grid-cols-12 grid-rows-12">
                 {/* Main Video Tile - Spans 8 cols, 8 rows (Matches screen aspect ratio 16:9) */}
                 <BentoCard
@@ -111,6 +111,7 @@ export default function ResultPage() {
                     icon={<div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
                     noScroll
                     noSpacer
+                    darkHeader
                 >
                     <div className="relative w-full h-full bg-black flex items-center justify-center group">
                         <video
@@ -140,7 +141,7 @@ export default function ResultPage() {
                             return (
                                 <div
                                     key={zone.id}
-                                    className="bg-white/5 border border-white/10 rounded-lg p-3 hover:bg-white/10 transition-colors"
+                                    className="bg-btn-bg/20 border border-primary-border rounded-lg p-3 hover:bg-btn-bg/40 transition-colors"
                                 >
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center gap-2">
@@ -151,7 +152,7 @@ export default function ResultPage() {
                                                     boxShadow: `0 0 10px rgb(${zone.color?.join(",")})`
                                                 }}
                                             />
-                                            <span className="text-sm font-medium text-white/90 truncate max-w-[120px]">
+                                            <span className="text-sm font-medium text-text-color truncate max-w-[120px]">
                                                 {zone.label}
                                             </span>
                                         </div>
@@ -170,16 +171,16 @@ export default function ResultPage() {
                                     {isLine && lineCrossing ? (
                                         <div className="grid grid-cols-2 gap-2 text-center items-end">
                                             <div className="text-left">
-                                                <p className="text-xs text-white/40 mb-0.5">In / Out</p>
+                                                <p className="text-xs text-secondary-text mb-0.5">In / Out</p>
                                                 <div className="flex items-baseline gap-2">
                                                     <span className="text-sm font-bold text-green-400">{lineCrossing.in}</span>
-                                                    <span className="text-xs text-white/20">/</span>
+                                                    <span className="text-xs text-text-color/20">/</span>
                                                     <span className="text-sm font-bold text-red-400">{lineCrossing.out}</span>
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-xs text-white/40 mb-0.5">Net Flow</p>
-                                                <span className={`text-sm font-bold ${lineCrossing.in - lineCrossing.out > 0 ? 'text-green-400' : lineCrossing.in - lineCrossing.out < 0 ? 'text-red-400' : 'text-white'}`}>
+                                                <p className="text-xs text-secondary-text mb-0.5">Net Flow</p>
+                                                <span className={`text-sm font-bold ${lineCrossing.in - lineCrossing.out > 0 ? 'text-green-400' : lineCrossing.in - lineCrossing.out < 0 ? 'text-red-400' : 'text-text-color'}`}>
                                                     {lineCrossing.in - lineCrossing.out > 0 ? '+' : ''}{lineCrossing.in - lineCrossing.out}
                                                 </span>
                                             </div>
@@ -187,14 +188,14 @@ export default function ResultPage() {
                                     ) : (
                                         <div className="grid grid-cols-2 gap-2 text-center items-end">
                                             <div className="text-left">
-                                                <p className="text-xs text-white/40 mb-0.5">Count</p>
-                                                <p className="text-sm font-bold text-white leading-none">
+                                                <p className="text-xs text-secondary-text mb-0.5">Count</p>
+                                                <p className="text-sm font-bold text-text-color leading-none">
                                                     {stats.total}
                                                 </p>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-xs text-white/40 mb-0.5">Avg Dwell</p>
-                                                <span className="text-sm font-bold text-amber-400">
+                                                <p className="text-xs text-secondary-text mb-0.5">Avg Dwell</p>
+                                                <span className="text-sm font-bold text-amber-500">
                                                     {avgDwell}s
                                                 </span>
                                             </div>
@@ -210,12 +211,12 @@ export default function ResultPage() {
                 <BentoCard className="col-span-8 row-span-4" noScroll>
                     <div className="flex flex-col h-full w-full">
                         {/* Analysis Tabs */}
-                        <div className="flex items-center gap-1 px-4 pt-2 border-b border-white/5">
+                        <div className="flex items-center gap-1 px-4 pt-2 border-b border-primary-border">
                             <button
                                 onClick={() => setAnalysisTab("activity")}
                                 className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${analysisTab === "activity"
-                                    ? "border-blue-500 text-blue-400"
-                                    : "border-transparent text-white/40 hover:text-white/60"
+                                    ? "border-blue-500 text-blue-500"
+                                    : "border-transparent text-secondary-text hover:text-text-color"
                                     }`}
                             >
                                 <Activity className="w-3.5 h-3.5" /> Activity
@@ -223,8 +224,8 @@ export default function ResultPage() {
                             <button
                                 onClick={() => setAnalysisTab("dwell")}
                                 className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${analysisTab === "dwell"
-                                    ? "border-amber-500 text-amber-400"
-                                    : "border-transparent text-white/40 hover:text-white/60"
+                                    ? "border-amber-500 text-amber-500"
+                                    : "border-transparent text-secondary-text hover:text-text-color"
                                     }`}
                             >
                                 <Clock className="w-3.5 h-3.5" /> Dwell Time
@@ -232,8 +233,8 @@ export default function ResultPage() {
                             <button
                                 onClick={() => setAnalysisTab("classes")}
                                 className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${analysisTab === "classes"
-                                    ? "border-green-500 text-green-400"
-                                    : "border-transparent text-white/40 hover:text-white/60"
+                                    ? "border-green-500 text-green-500"
+                                    : "border-transparent text-secondary-text hover:text-text-color"
                                     }`}
                             >
                                 <Users className="w-3.5 h-3.5" /> Demographics
@@ -241,8 +242,8 @@ export default function ResultPage() {
                             <button
                                 onClick={() => setAnalysisTab("peak")}
                                 className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${analysisTab === "peak"
-                                    ? "border-red-500 text-red-400"
-                                    : "border-transparent text-white/40 hover:text-white/60"
+                                    ? "border-red-500 text-red-500"
+                                    : "border-transparent text-secondary-text hover:text-text-color"
                                     }`}
                             >
                                 <BarChart3 className="w-3.5 h-3.5" /> Peak Analysis
@@ -285,12 +286,12 @@ export default function ResultPage() {
                 <BentoCard className="col-span-4 row-span-4" noScroll>
                     <div className="flex flex-col h-full p-4 overflow-hidden">
                         {/* Tab Switcher */}
-                        <div className="flex p-1 bg-white/5 rounded-lg mb-4 shrink-0">
+                        <div className="flex p-1 bg-btn-bg rounded-lg mb-4 shrink-0 border border-primary-border">
                             <button
                                 onClick={() => setActiveTab("actions")}
                                 className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === "actions"
-                                    ? "bg-blue-500/20 text-blue-400 shadow-sm"
-                                    : "text-white/40 hover:text-white/60"
+                                    ? "bg-blue-500/20 text-blue-500 shadow-sm"
+                                    : "text-secondary-text hover:text-text-color"
                                     }`}
                             >
                                 Actions
@@ -298,8 +299,8 @@ export default function ResultPage() {
                             <button
                                 onClick={() => setActiveTab("details")}
                                 className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === "details"
-                                    ? "bg-blue-500/20 text-blue-400 shadow-sm"
-                                    : "text-white/40 hover:text-white/60"
+                                    ? "bg-blue-500/20 text-blue-500 shadow-sm"
+                                    : "text-secondary-text hover:text-text-color"
                                     }`}
                             >
                                 Details
@@ -319,14 +320,14 @@ export default function ResultPage() {
                                     <div className="flex gap-2 shrink-0">
                                         <a
                                             href={api.getExportCsvUrl(taskId)}
-                                            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium transition-all"
+                                            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-btn-bg hover:bg-btn-hover border border-primary-border text-xs font-medium transition-all text-text-color"
                                             download
                                         >
                                             <Table className="w-3 h-3" /> CSV
                                         </a>
                                         <a
                                             href={api.getExportJsonUrl(taskId)}
-                                            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium transition-all"
+                                            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-btn-bg hover:bg-btn-hover border border-primary-border text-xs font-medium transition-all text-text-color"
                                             download
                                         >
                                             <FileJson className="w-3 h-3" /> JSON
@@ -334,9 +335,7 @@ export default function ResultPage() {
                                     </div>
 
                                     <a
-                                        href={videoUrl}
-                                        download={`zonenet_output_${taskId}.mp4`}
-                                        className="w-full py-2 flex items-center justify-center gap-2 rounded-lg bg-white text-black hover:bg-gray-200 text-sm font-bold transition-all shrink-0 mt-auto"
+                                        className="w-full py-2 flex items-center justify-center gap-2 rounded-lg bg-text-color text-bg-color hover:opacity-90 text-sm font-bold transition-all shrink-0 mt-auto"
                                     >
                                         <Download className="w-4 h-4" />
                                         Download Video
@@ -344,22 +343,22 @@ export default function ResultPage() {
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-2 gap-3 h-full content-start overflow-y-auto pr-1">
-                                    <div className="bg-white/5 rounded-lg p-3">
-                                        <p className="text-[10px] text-white/50 uppercase tracking-widest mb-1">Model</p>
+                                    <div className="bg-btn-bg/40 rounded-lg p-3 border border-primary-border">
+                                        <p className="text-[10px] text-secondary-text uppercase tracking-widest mb-1">Model</p>
                                         <p className="text-sm font-semibold truncate" title={job.model}>
                                             {job.model?.replace(".pt", "") || "N/A"}
                                         </p>
                                     </div>
-                                    <div className="bg-white/5 rounded-lg p-3">
-                                        <p className="text-[10px] text-white/50 uppercase tracking-widest mb-1">Confidence</p>
+                                    <div className="bg-btn-bg/40 rounded-lg p-3 border border-primary-border">
+                                        <p className="text-[10px] text-secondary-text uppercase tracking-widest mb-1">Confidence</p>
                                         <p className="text-sm font-semibold">{job.confidence}%</p>
                                     </div>
-                                    <div className="bg-white/5 rounded-lg p-3">
-                                        <p className="text-[10px] text-white/50 uppercase tracking-widest mb-1">Dimensions</p>
+                                    <div className="bg-btn-bg/40 rounded-lg p-3 border border-primary-border">
+                                        <p className="text-[10px] text-secondary-text uppercase tracking-widest mb-1">Dimensions</p>
                                         <p className="text-sm font-semibold">{job.frameWidth} x {job.frameHeight}</p>
                                     </div>
-                                    <div className="bg-white/5 rounded-lg p-3">
-                                        <p className="text-[10px] text-white/50 uppercase tracking-widest mb-1">Processed</p>
+                                    <div className="bg-btn-bg/40 rounded-lg p-3 border border-primary-border">
+                                        <p className="text-[10px] text-secondary-text uppercase tracking-widest mb-1">Processed</p>
                                         <p className="text-sm font-semibold">{job.processTime?.toFixed(1)}s</p>
                                     </div>
                                 </div>
