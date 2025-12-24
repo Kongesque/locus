@@ -30,8 +30,9 @@ def run_processing_pipeline(taskID, job, zones, confidence, model='yolo11n.pt', 
     final_detection_events = []
     final_dwell_events = []
     final_line_crossing_counts = {}
+    final_heatmap_data = None
     
-    for frame, progress, detection_events, dwell_events, line_crossing_counts in detection(
+    for frame, progress, detection_events, dwell_events, line_crossing_counts, heatmap_data in detection(
         job['video_path'], 
         zones,
         (job['frame_width'], job['frame_height']), 
@@ -43,6 +44,7 @@ def run_processing_pipeline(taskID, job, zones, confidence, model='yolo11n.pt', 
         final_detection_events = detection_events
         final_dwell_events = dwell_events
         final_line_crossing_counts = line_crossing_counts
+        final_heatmap_data = heatmap_data
         # Update progress in DB every 5% to avoid too many writes
         if progress >= last_progress + 5 or progress == 100:
             update_job(taskID, progress=progress)
@@ -53,6 +55,7 @@ def run_processing_pipeline(taskID, job, zones, confidence, model='yolo11n.pt', 
     
     update_job(taskID, process_time=process_time, status='completed', 
                detection_data=final_detection_events, dwell_data=final_dwell_events,
-               line_crossing_data=final_line_crossing_counts)
+               line_crossing_data=final_line_crossing_counts, heatmap_data=final_heatmap_data)
     
     # clear_all_uploads()  # Commented out to prevent deleting frames needed by the frontend for results/editing
+

@@ -5,12 +5,13 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/utils/api";
 import { LoadingOverlay } from "@/components/layout";
-import { Download, FileJson, Table, Clock, Users, Activity, BarChart3 } from "lucide-react";
+import { Download, FileJson, Table, Clock, Users, Activity, BarChart3, Flame } from "lucide-react";
 import { BentoGrid, BentoCard } from "@/components/dashboard/BentoGrid";
 import ActivityTimeline from "@/components/dashboard/ActivityTimeline";
 import DwellTimeChart from "@/components/dashboard/DwellTimeChart";
 import ClassDistributionChart from "@/components/dashboard/ClassDistributionChart";
 import PeakTimeChart from "@/components/dashboard/PeakTimeChart";
+import HeatmapChart from "@/components/dashboard/HeatmapChart";
 import Sparkline from "@/components/dashboard/Sparkline";
 
 export default function ResultPage() {
@@ -19,7 +20,7 @@ export default function ResultPage() {
     const router = useRouter();
     const taskId = params.taskId as string;
     const [activeTab, setActiveTab] = useState<"actions" | "details">("actions");
-    const [analysisTab, setAnalysisTab] = useState<"activity" | "dwell" | "classes" | "peak">("activity");
+    const [analysisTab, setAnalysisTab] = useState<"activity" | "dwell" | "classes" | "peak" | "heatmap">("activity");
 
     const { data: job, isLoading } = useQuery({
         queryKey: ["job", taskId],
@@ -248,6 +249,15 @@ export default function ResultPage() {
                             >
                                 <BarChart3 className="w-3.5 h-3.5" /> Peak Analysis
                             </button>
+                            <button
+                                onClick={() => setAnalysisTab("heatmap")}
+                                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${analysisTab === "heatmap"
+                                    ? "border-orange-500 text-orange-500"
+                                    : "border-transparent text-secondary-text hover:text-text-color"
+                                    }`}
+                            >
+                                <Flame className="w-3.5 h-3.5" /> Heatmap
+                            </button>
                         </div>
 
                         {/* Chart Viewport */}
@@ -276,6 +286,12 @@ export default function ResultPage() {
                                     data={job.detectionData}
                                     zones={job.zones}
                                     duration={job.processTime}
+                                />
+                            )}
+                            {analysisTab === "heatmap" && (
+                                <HeatmapChart
+                                    data={job.heatmapData}
+                                    zones={job.zones}
                                 />
                             )}
                         </div>

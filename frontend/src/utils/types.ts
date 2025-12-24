@@ -16,6 +16,7 @@ export interface Job {
   detectionData: DetectionEvent[];
   dwellData: DwellEvent[];
   lineCrossingData: Record<string, LineCrossing>;
+  heatmapData: number[][] | null;  // 2D grid for activity heatmap
   processTime: number;
   sourceType: "file" | "rtsp" | "webcam";
   streamUrl?: string;

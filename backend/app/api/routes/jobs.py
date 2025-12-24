@@ -56,6 +56,7 @@ async def get_job_details(task_id: str):
         "detectionData": job.get("detection_data", []),
         "dwellData": job.get("dwell_data", []),
         "lineCrossingData": job.get("line_crossing_data", {}),
+        "heatmapData": job.get("heatmap_data"),
         "processTime": job.get("process_time", 0),
         "sourceType": job.get("source_type", "file"),
         "streamUrl": job.get("stream_url"),

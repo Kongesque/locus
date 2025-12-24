@@ -116,6 +116,9 @@ fuse_score: True
         if os.path.exists(tracker_yaml_path):
             os.remove(tracker_yaml_path)
     
+# Heatmap resolution constant
+HEATMAP_RESOLUTION = 50
+
 def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_yaml_path):
     # Constants
     SOURCE_VIDEO = path_x
@@ -124,6 +127,9 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
     font = cv2.FONT_ITALIC
     frame_counter = 0
     track_history = defaultdict(lambda: [])
+    
+    # Initialize heatmap grid for activity visualization
+    heatmap_grid = np.zeros((HEATMAP_RESOLUTION, HEATMAP_RESOLUTION), dtype=np.float32)
     
     # Per-zone tracking: {zone_id: {track_id: {'in_zone': True/False, 'entry_time': timestamp}}}
     crossed_objects_per_zone = {z['id']: {} for z in zones}
@@ -277,6 +283,13 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
             track.append((float(x), float(y)))
             if len(track) > 30:
                 track.pop(0)
+            
+            # Update heatmap grid with object position
+            grid_x = int((center_x / width) * HEATMAP_RESOLUTION)
+            grid_y = int((center_y / height) * HEATMAP_RESOLUTION)
+            grid_x = min(max(grid_x, 0), HEATMAP_RESOLUTION - 1)
+            grid_y = min(max(grid_y, 0), HEATMAP_RESOLUTION - 1)
+            heatmap_grid[grid_y, grid_x] += 1
             
             # Check each zone
             for zd in zone_data:
@@ -434,7 +447,9 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
         progress = int((frame_counter / total_frames) * 100) if total_frames > 0 else 0
         
         if success:
-            yield frame, progress, detection_events, dwell_events, line_crossing_counts
+            # Convert heatmap grid to list for JSON serialization
+            heatmap_data = heatmap_grid.tolist()
+            yield frame, progress, detection_events, dwell_events, line_crossing_counts, heatmap_data
         else:
             break
         

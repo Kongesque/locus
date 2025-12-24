@@ -45,7 +45,8 @@ def init_db():
         ('source_type', 'TEXT DEFAULT "file"'),
         ('stream_url', 'TEXT'),
         ('dwell_data', 'TEXT'),
-        ('line_crossing_data', 'TEXT')
+        ('line_crossing_data', 'TEXT'),
+        ('heatmap_data', 'TEXT')
     ]
 
     for col_name, col_def in columns_to_add:
@@ -107,6 +108,12 @@ def get_job(task_id):
             job_dict['line_crossing_data'] = json.loads(job_dict['line_crossing_data']) if job_dict.get('line_crossing_data') else {}
         except (ValueError, TypeError):
             job_dict['line_crossing_data'] = {}
+        
+        # Parse heatmap_data JSON (2D array for activity visualization)
+        try:
+            job_dict['heatmap_data'] = json.loads(job_dict['heatmap_data']) if job_dict.get('heatmap_data') else None
+        except (ValueError, TypeError):
+            job_dict['heatmap_data'] = None
              
         # Ensure target_class is present (for old records)
         if 'target_class' not in job_dict or job_dict['target_class'] is None:
@@ -170,6 +177,8 @@ def update_job(task_id, **kwargs):
         kwargs['dwell_data'] = json.dumps(kwargs['dwell_data'])
     if 'line_crossing_data' in kwargs:
         kwargs['line_crossing_data'] = json.dumps(kwargs['line_crossing_data'])
+    if 'heatmap_data' in kwargs:
+        kwargs['heatmap_data'] = json.dumps(kwargs['heatmap_data'])
 
     columns = ', '.join(f"{key} = ?" for key in kwargs.keys())
     values = list(kwargs.values())
