@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/utils/api";
 import { LoadingOverlay } from "@/components/layout";
-import { Download, FileJson, Table, Clock, Users, Activity, BarChart3, Flame } from "lucide-react";
+import { Download, FileJson, Table, Clock, Users, Activity, BarChart3, Flame, Info } from "lucide-react";
 import { BentoGrid, BentoCard } from "@/components/dashboard/BentoGrid";
 import ActivityTimeline from "@/components/dashboard/ActivityTimeline";
 import DwellTimeChart from "@/components/dashboard/DwellTimeChart";
@@ -19,8 +19,7 @@ export default function ResultPage() {
     const router = useRouter();
     const taskId = params.taskId as string;
 
-    const [activeTab, setActiveTab] = useState<"actions" | "details">("actions");
-    const [analysisTab, setAnalysisTab] = useState<"activity" | "dwell" | "peak">("activity");
+    const [analysisTab, setAnalysisTab] = useState<"activity" | "dwell" | "peak" | "info">("activity");
     const [isHeatmapEnabled, setIsHeatmapEnabled] = useState(false);
 
     const { data: job, isLoading } = useQuery({
@@ -139,24 +138,24 @@ export default function ResultPage() {
                 </BentoCard>
 
                 {/* Zone Statistics - Spans 4 cols, matches height of video row automatically */}
-                <BentoCard className="col-span-4 h-full" title="Zone Analysis">
-                    <div className="space-y-3 px-4 pb-4 pt-0 h-full overflow-y-auto pr-2">
-                        {/* Heatmap Toggle Control */}
-                        <div className="flex items-center justify-between bg-btn-bg/20 border border-primary-border rounded-lg p-3 mb-2">
-                            <div className="flex items-center gap-2">
-                                <Flame className={`w-4 h-4 ${isHeatmapEnabled ? "text-orange-500 fill-orange-500" : "text-secondary-text"}`} />
-                                <span className="text-sm font-medium text-text-color">Show Heatmap</span>
-                            </div>
-                            <button
-                                onClick={() => setIsHeatmapEnabled(!isHeatmapEnabled)}
-                                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${isHeatmapEnabled ? "bg-orange-500" : "bg-gray-700"}`}
-                            >
-                                <span
-                                    className={`${isHeatmapEnabled ? "translate-x-5" : "translate-x-1"
-                                        } inline-block h-3 w-3 transform rounded-full bg-white transition-transform`}
-                                />
-                            </button>
-                        </div>
+                <BentoCard
+                    className="col-span-4 h-full"
+                    title="Zone Analysis"
+                    headerAction={
+                        <button
+                            onClick={() => setIsHeatmapEnabled(!isHeatmapEnabled)}
+                            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium transition-all ${isHeatmapEnabled
+                                ? "bg-orange-500/20 text-orange-500 border border-orange-500/30"
+                                : "bg-white/5 text-secondary-text border border-white/10 hover:bg-white/10"
+                                }`}
+                            title="Toggle Heatmap Overlay"
+                        >
+                            <Flame className="w-3 h-3" />
+                            {isHeatmapEnabled ? "Heatmap" : "Heatmap"}
+                        </button>
+                    }
+                >
+                    <div className="space-y-2 px-4 pb-4 pt-1">
 
                         {job.zones?.map((zone) => {
                             const stats = zoneStats[zone.id] || { total: 0, peak: 0 };
@@ -171,25 +170,22 @@ export default function ResultPage() {
                             return (
                                 <div
                                     key={zone.id}
-                                    className="bg-btn-bg/20 border border-primary-border rounded-lg p-3 hover:bg-btn-bg/40 transition-colors"
+                                    className="bg-white/5 hover:bg-white/10 rounded-md p-3 transition-colors group"
                                 >
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center gap-2">
                                             <div
-                                                className="w-2 h-2 rounded-full shadow-[0_0_8px]"
-                                                style={{
-                                                    backgroundColor: `rgb(${zone.color?.join(",")})`,
-                                                    boxShadow: `0 0 10px rgb(${zone.color?.join(",")})`
-                                                }}
+                                                className="w-1.5 h-1.5 rounded-full"
+                                                style={{ backgroundColor: `rgb(${zone.color?.join(",")})` }}
                                             />
-                                            <span className="text-sm font-medium text-text-color truncate max-w-[120px]">
+                                            <span className="text-sm font-medium text-text-color/90 truncate max-w-[120px]">
                                                 {zone.label}
                                             </span>
                                         </div>
                                     </div>
 
-                                    {/* Sparkline */}
-                                    <div className="mb-3 -mx-1">
+                                    {/* Sparkline - More subtle */}
+                                    <div className="mb-2 h-8 opacity-60 group-hover:opacity-100 transition-opacity">
                                         <Sparkline
                                             data={job.detectionData}
                                             zoneId={zone.id}
@@ -199,33 +195,32 @@ export default function ResultPage() {
                                     </div>
 
                                     {isLine && lineCrossing ? (
-                                        <div className="grid grid-cols-2 gap-2 text-center items-end">
-                                            <div className="text-left">
-                                                <p className="text-xs text-secondary-text mb-0.5">In / Out</p>
-                                                <div className="flex items-baseline gap-2">
-                                                    <span className="text-sm font-bold text-green-400">{lineCrossing.in}</span>
-                                                    <span className="text-xs text-text-color/20">/</span>
-                                                    <span className="text-sm font-bold text-red-400">{lineCrossing.out}</span>
+                                        <div className="flex items-end justify-between">
+                                            <div>
+                                                <p className="text-[10px] text-secondary-text uppercase tracking-wider mb-0.5">Net Flow</p>
+                                                <div className={`text-base font-bold leading-none ${lineCrossing.in - lineCrossing.out > 0 ? 'text-green-400' : lineCrossing.in - lineCrossing.out < 0 ? 'text-red-400' : 'text-text-color'
+                                                    }`}>
+                                                    {lineCrossing.in - lineCrossing.out > 0 ? '+' : ''}{lineCrossing.in - lineCrossing.out}
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-xs text-secondary-text mb-0.5">Net Flow</p>
-                                                <span className={`text-sm font-bold ${lineCrossing.in - lineCrossing.out > 0 ? 'text-green-400' : lineCrossing.in - lineCrossing.out < 0 ? 'text-red-400' : 'text-text-color'}`}>
-                                                    {lineCrossing.in - lineCrossing.out > 0 ? '+' : ''}{lineCrossing.in - lineCrossing.out}
-                                                </span>
+                                                <div className="flex gap-2 text-xs text-secondary-text">
+                                                    <span>In: <span className="text-green-400 font-medium">{lineCrossing.in}</span></span>
+                                                    <span>Out: <span className="text-red-400 font-medium">{lineCrossing.out}</span></span>
+                                                </div>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="grid grid-cols-2 gap-2 text-center items-end">
-                                            <div className="text-left">
-                                                <p className="text-xs text-secondary-text mb-0.5">Count</p>
-                                                <p className="text-sm font-bold text-text-color leading-none">
+                                        <div className="flex items-end justify-between">
+                                            <div>
+                                                <p className="text-[10px] text-secondary-text uppercase tracking-wider mb-0.5">Visitors</p>
+                                                <p className="text-xl font-bold text-text-color leading-none">
                                                     {stats.total}
                                                 </p>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-xs text-secondary-text mb-0.5">Avg Dwell</p>
-                                                <span className="text-sm font-bold text-amber-500">
+                                                <p className="text-[10px] text-secondary-text uppercase tracking-wider mb-0.5">Avg Time</p>
+                                                <span className="text-sm font-medium text-amber-500/90">
                                                     {avgDwell}s
                                                 </span>
                                             </div>
@@ -269,6 +264,15 @@ export default function ResultPage() {
                             >
                                 <BarChart3 className="w-3.5 h-3.5" /> Peak Analysis
                             </button>
+                            <button
+                                onClick={() => setAnalysisTab("info")}
+                                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${analysisTab === "info"
+                                    ? "border-blue-400 text-blue-400"
+                                    : "border-transparent text-secondary-text hover:text-text-color"
+                                    }`}
+                            >
+                                <Info className="w-3.5 h-3.5" /> Video Info
+                            </button>
                         </div>
 
                         {/* Chart Viewport */}
@@ -289,10 +293,82 @@ export default function ResultPage() {
                             {analysisTab === "peak" && (
                                 <PeakTimeChart
                                     data={job.detectionData}
-
                                     zones={job.zones}
                                     duration={job.processTime}
                                 />
+                            )}
+                            {analysisTab === "info" && (
+                                <div className="h-full content-start overflow-y-auto px-1 pr-3">
+                                    <div className="space-y-6">
+                                        {/* Video Specs Section */}
+                                        <div className="space-y-3">
+                                            <h4 className="text-xs font-bold text-text-color uppercase tracking-wider pb-2 border-b border-white/10">Video Specification</h4>
+                                            <div className="grid grid-cols-2 gap-y-3 gap-x-8 text-sm">
+                                                <div className="flex justify-between">
+                                                    <span className="text-secondary-text">Resolution</span>
+                                                    <span className="font-mono text-text-color font-medium">{job.frameWidth} x {job.frameHeight}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-secondary-text">Total Duration</span>
+                                                    <span className="font-mono text-text-color font-medium">{job.processTime?.toFixed(2)}s</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-secondary-text">File Format</span>
+                                                    <span className="font-mono text-text-color font-medium">MP4 / H.264</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-secondary-text">Frame Rate</span>
+                                                    <span className="font-mono text-text-color font-medium">30 FPS</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* AI Config Section */}
+                                        <div className="space-y-3">
+                                            <h4 className="text-xs font-bold text-text-color uppercase tracking-wider pb-2 border-b border-white/10">AI Configuration</h4>
+                                            <div className="grid grid-cols-2 gap-y-3 gap-x-8 text-sm">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-secondary-text">Model Architecture</span>
+                                                    <span className="font-medium text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded text-xs">{job.model || "YOLOv8"}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-secondary-text">Confidence</span>
+                                                    <span className="font-mono text-text-color font-medium">
+                                                        {(job.confidence > 1 ? job.confidence : job.confidence * 100).toFixed(0)}%
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-secondary-text">Status</span>
+                                                    <span className="font-medium text-green-400 capitalize flex items-center gap-1.5">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                                                        {job.status}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Stats Section */}
+                                        <div className="space-y-3">
+                                            <h4 className="text-xs font-bold text-text-color uppercase tracking-wider pb-2 border-b border-white/10">Analysis Data</h4>
+                                            <div className="grid grid-cols-2 gap-y-3 gap-x-8 text-sm">
+                                                <div className="flex justify-between">
+                                                    <span className="text-secondary-text">Active Zones</span>
+                                                    <span className="font-mono text-text-color font-medium">{job.zones?.length || 0}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-secondary-text">Detected Events</span>
+                                                    <span className="font-mono text-text-color font-medium">{job.detectionData?.length || 0}</span>
+                                                </div>
+                                                <div className="col-span-2 flex justify-between items-center pt-2 border-t border-white/5 mt-1">
+                                                    <span className="text-secondary-text">Processing ID</span>
+                                                    <code className="text-xs font-mono text-text-color/60 hover:text-text-color transition-colors select-all cursor-text">
+                                                        {taskId}
+                                                    </code>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             )}
                         </div>
                     </div>
@@ -300,88 +376,45 @@ export default function ResultPage() {
 
                 {/* Control Panel / Actions - Spans 4 cols, fills remaining height */}
                 <BentoCard className="col-span-4" noScroll>
-                    <div className="flex flex-col h-full p-4 overflow-hidden">
-                        {/* Tab Switcher */}
-                        <div className="flex p-1 bg-btn-bg rounded-lg mb-4 shrink-0 border border-primary-border">
-                            <button
-                                onClick={() => setActiveTab("actions")}
-                                className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === "actions"
-                                    ? "bg-blue-500/20 text-blue-500 shadow-sm"
-                                    : "text-secondary-text hover:text-text-color"
-                                    }`}
+                    <div className="flex flex-col h-full p-4 text-text-color">
+
+                        {/* Primary Action */}
+                        <a
+                            href={videoUrl}
+                            download={`video-${taskId}.mp4`}
+                            className="w-full py-3 flex items-center justify-center gap-2 rounded-lg bg-text-color text-bg-color hover:opacity-90 text-sm font-bold transition-all mb-3 group"
+                        >
+                            <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                            Download Video
+                        </a>
+
+                        {/* Secondary Actions Row */}
+                        <div className="flex gap-2 mb-3">
+                            <a
+                                href={api.getExportCsvUrl(taskId)}
+                                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-btn-bg hover:bg-btn-hover border border-primary-border text-xs font-medium transition-all text-text-color"
+                                download
                             >
-                                Actions
-                            </button>
-                            <button
-                                onClick={() => setActiveTab("details")}
-                                className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === "details"
-                                    ? "bg-blue-500/20 text-blue-500 shadow-sm"
-                                    : "text-secondary-text hover:text-text-color"
-                                    }`}
+                                <Table className="w-3.5 h-3.5 opacity-70" /> CSV Export
+                            </a>
+                            <a
+                                href={api.getExportJsonUrl(taskId)}
+                                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-btn-bg hover:bg-btn-hover border border-primary-border text-xs font-medium transition-all text-text-color"
+                                download
                             >
-                                Details
-                            </button>
+                                <FileJson className="w-3.5 h-3.5 opacity-70" /> JSON Export
+                            </a>
                         </div>
 
-                        <div className="flex-1 min-h-0">
-                            {activeTab === "actions" ? (
-                                <div className="flex flex-col gap-3 h-full overflow-y-auto pr-1">
-                                    <button
-                                        onClick={() => router.push(`/zone/${taskId}`)}
-                                        className="w-full py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-sm font-medium transition-all shrink-0"
-                                    >
-                                        Edit Zones
-                                    </button>
+                        {/* Edit Action */}
+                        <button
+                            onClick={() => router.push(`/zone/${taskId}`)}
+                            className="w-full py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-xs font-medium transition-all mb-auto"
+                        >
+                            Edit Zones & Configuration
+                        </button>
 
-                                    <div className="flex gap-2 shrink-0">
-                                        <a
-                                            href={api.getExportCsvUrl(taskId)}
-                                            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-btn-bg hover:bg-btn-hover border border-primary-border text-xs font-medium transition-all text-text-color"
-                                            download
-                                        >
-                                            <Table className="w-3 h-3" /> CSV
-                                        </a>
-                                        <a
-                                            href={api.getExportJsonUrl(taskId)}
-                                            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-btn-bg hover:bg-btn-hover border border-primary-border text-xs font-medium transition-all text-text-color"
-                                            download
-                                        >
-                                            <FileJson className="w-3 h-3" /> JSON
-                                        </a>
-                                    </div>
 
-                                    <a
-                                        href={videoUrl}
-                                        download={`video-${taskId}.mp4`}
-                                        className="w-full py-2 flex items-center justify-center gap-2 rounded-lg bg-text-color text-bg-color hover:opacity-90 text-sm font-bold transition-all shrink-0"
-                                    >
-                                        <Download className="w-4 h-4" />
-                                        Download Video
-                                    </a>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-2 gap-3 h-full content-start overflow-y-auto pr-1">
-                                    <div className="bg-btn-bg/40 rounded-lg p-3 border border-primary-border">
-                                        <p className="text-[10px] text-secondary-text uppercase tracking-widest mb-1">Model</p>
-                                        <p className="text-sm font-semibold truncate" title={job.model}>
-                                            {job.model?.replace(".pt", "") || "N/A"}
-                                        </p>
-                                    </div>
-                                    <div className="bg-btn-bg/40 rounded-lg p-3 border border-primary-border">
-                                        <p className="text-[10px] text-secondary-text uppercase tracking-widest mb-1">Confidence</p>
-                                        <p className="text-sm font-semibold">{job.confidence}%</p>
-                                    </div>
-                                    <div className="bg-btn-bg/40 rounded-lg p-3 border border-primary-border">
-                                        <p className="text-[10px] text-secondary-text uppercase tracking-widest mb-1">Dimensions</p>
-                                        <p className="text-sm font-semibold">{job.frameWidth} x {job.frameHeight}</p>
-                                    </div>
-                                    <div className="bg-btn-bg/40 rounded-lg p-3 border border-primary-border">
-                                        <p className="text-[10px] text-secondary-text uppercase tracking-widest mb-1">Processed</p>
-                                        <p className="text-sm font-semibold">{job.processTime?.toFixed(1)}s</p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
                     </div>
                 </BentoCard>
             </BentoGrid>
