@@ -132,6 +132,7 @@ export default function OccupancyStackedChart({ data, zones, duration }: Occupan
                             fill={`url(#occupancy${zone.id})`}
                             name={zone.label}
                             stackId="1"
+                            isAnimationActive={false}
                         />
                     ))}
                 </AreaChart>

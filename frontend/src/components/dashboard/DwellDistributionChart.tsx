@@ -101,7 +101,7 @@ export default function DwellDistributionChart({ data }: DwellDistributionChartP
                             return [`${value ?? 0} visitors (${props.payload.percentage}%)`, props.payload.label];
                         }) as never}
                     />
-                    <Bar dataKey="count" radius={[4, 4, 0, 0]} barSize={32}>
+                    <Bar dataKey="count" radius={[4, 4, 0, 0]} barSize={32} isAnimationActive={false}>
                         {chartData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}

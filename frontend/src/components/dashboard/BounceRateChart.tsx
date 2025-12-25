@@ -106,8 +106,8 @@ export default function BounceRateChart({ dwellData, zones, bounceThreshold = 5 
                         }) as never}
                         labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
                     />
-                    <Bar dataKey="engagedRate" name="Engaged" stackId="a" fill="#22c55e" radius={[0, 0, 0, 0]} barSize={16} />
-                    <Bar dataKey="bounceRate" name="Bounce" stackId="a" fill="#ef4444" radius={[0, 4, 4, 0]} barSize={16} />
+                    <Bar dataKey="engagedRate" name="Engaged" stackId="a" fill="#22c55e" radius={[0, 0, 0, 0]} barSize={16} isAnimationActive={false} />
+                    <Bar dataKey="bounceRate" name="Bounce" stackId="a" fill="#ef4444" radius={[0, 4, 4, 0]} barSize={16} isAnimationActive={false} />
                 </BarChart>
             </ResponsiveContainer>
             {/* Bounce threshold indicator */}

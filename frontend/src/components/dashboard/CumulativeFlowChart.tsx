@@ -143,6 +143,7 @@ export default function CumulativeFlowChart({ detectionData, lineCrossingData, z
                         stroke="#22c55e"
                         strokeWidth={2}
                         dot={false}
+                        isAnimationActive={false}
                     />
                     <Line
                         type="monotone"
@@ -151,6 +152,7 @@ export default function CumulativeFlowChart({ detectionData, lineCrossingData, z
                         stroke="#ef4444"
                         strokeWidth={2}
                         dot={false}
+                        isAnimationActive={false}
                     />
                     <Line
                         type="monotone"
@@ -160,6 +162,7 @@ export default function CumulativeFlowChart({ detectionData, lineCrossingData, z
                         strokeWidth={2}
                         strokeDasharray="5 5"
                         dot={false}
+                        isAnimationActive={false}
                     />
                 </LineChart>
             </ResponsiveContainer>

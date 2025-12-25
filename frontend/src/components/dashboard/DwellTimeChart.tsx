@@ -101,7 +101,7 @@ export default function DwellTimeChart({ data, zones }: DwellTimeChartProps) {
                         align="right"
                         wrapperStyle={{ fontSize: '10px', paddingBottom: '10px', top: 0, right: 0 }}
                     />
-                    <Bar dataKey="avgDwell" radius={[0, 4, 4, 0]} barSize={20}>
+                    <Bar dataKey="avgDwell" radius={[0, 4, 4, 0]} barSize={20} isAnimationActive={false}>
                         {chartData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={`rgb(${entry.color.join(",")})`} />
                         ))}

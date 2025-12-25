@@ -175,6 +175,7 @@ export default function ActivityTimeline({ data, zones, duration }: ActivityTime
                             fill={`url(#color${zone.id})`}
                             name={zone.label}
                             stackId="1"
+                            isAnimationActive={false}
                         />
                     ))}
                 </AreaChart>

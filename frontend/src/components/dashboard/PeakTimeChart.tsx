@@ -110,6 +110,7 @@ export default function PeakTimeChart({ data, zones, duration }: PeakTimeChartPr
                             dot={false}
                             activeDot={{ r: 4 }}
                             name={zone.label}
+                            isAnimationActive={false}
                         />
                     ))}
                 </LineChart>

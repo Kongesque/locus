@@ -110,9 +110,9 @@ export default function ZoneComparisonChart({ detectionData, dwellData, zones }:
                         align="right"
                         wrapperStyle={{ fontSize: '10px', paddingBottom: '8px', top: 0, right: 0 }}
                     />
-                    <Bar dataKey="visitors" name="Visitors" fill="#2dd4bf" radius={[4, 4, 0, 0]} barSize={16} />
-                    <Bar dataKey="peak" name="Peak" fill="#f43f5e" radius={[4, 4, 0, 0]} barSize={16} />
-                    <Bar dataKey="avgDwell" name="Dwell (s)" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={16} />
+                    <Bar dataKey="visitors" name="Visitors" fill="#2dd4bf" radius={[4, 4, 0, 0]} barSize={16} isAnimationActive={false} />
+                    <Bar dataKey="peak" name="Peak" fill="#f43f5e" radius={[4, 4, 0, 0]} barSize={16} isAnimationActive={false} />
+                    <Bar dataKey="avgDwell" name="Dwell (s)" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={16} isAnimationActive={false} />
                 </BarChart>
             </ResponsiveContainer>
         </div>

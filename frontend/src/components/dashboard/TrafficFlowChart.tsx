@@ -105,8 +105,8 @@ export default function TrafficFlowChart({ lineCrossingData, zones }: TrafficFlo
                         formatter={(value) => value === 'in' ? '↓ Entries' : '↑ Exits'}
                     />
                     <ReferenceLine x={0} stroke="#555" strokeWidth={1} />
-                    <Bar dataKey="in" name="in" fill="#22c55e" radius={[0, 4, 4, 0]} barSize={12} />
-                    <Bar dataKey="out" name="out" fill="#ef4444" radius={[4, 0, 0, 4]} barSize={12} />
+                    <Bar dataKey="in" name="in" fill="#22c55e" radius={[0, 4, 4, 0]} barSize={12} isAnimationActive={false} />
+                    <Bar dataKey="out" name="out" fill="#ef4444" radius={[4, 0, 0, 4]} barSize={12} isAnimationActive={false} />
                 </BarChart>
             </ResponsiveContainer>
             {/* Net Flow Summary */}

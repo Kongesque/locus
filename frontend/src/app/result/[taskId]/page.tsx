@@ -128,8 +128,6 @@ export default function ResultPage() {
                                 src={videoUrl}
                                 controls
                                 className="w-full h-full object-contain"
-                                autoPlay
-                                loop
                                 muted
                             />
                             {/* Heatmap Overlay */}
