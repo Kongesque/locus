@@ -7,6 +7,7 @@ import { api } from "@/utils/api";
 import { LoadingOverlay } from "@/components/layout";
 import { Download, FileJson, Table, Clock, Users, Activity, BarChart3, Flame, Info, TrendingUp, Layers, Timer, ArrowLeftRight, PieChart, MousePointerClick } from "lucide-react";
 import { BentoGrid, BentoCard } from "@/components/dashboard/BentoGrid";
+import DashboardCard from "@/components/dashboard/DashboardCard";
 import ActivityTimeline from "@/components/dashboard/ActivityTimeline";
 import DwellTimeChart from "@/components/dashboard/DwellTimeChart";
 import PeakTimeChart from "@/components/dashboard/PeakTimeChart";
@@ -267,117 +268,109 @@ export default function ResultPage() {
                                 </div>
 
                                 {/* Activity Card */}
-                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Activity className="w-3.5 h-3.5 text-blue-400" />
-                                        <span className="text-xs font-medium text-text-color/90">Activity Timeline</span>
-                                    </div>
-                                    <div className="h-[100px] overflow-hidden">
-                                        <ActivityTimeline
-                                            data={job.detectionData}
-                                            zones={job.zones}
-                                            duration={job.processTime}
-                                        />
-                                    </div>
-                                </div>
+                                <DashboardCard
+                                    title="Activity Timeline"
+                                    icon={<Activity className="w-3.5 h-3.5 text-blue-400" />}
+                                    tooltip="Visualizes detection frequency over the video duration."
+                                    contentClassName="h-[100px] overflow-hidden"
+                                >
+                                    <ActivityTimeline
+                                        data={job.detectionData}
+                                        zones={job.zones}
+                                        duration={job.processTime}
+                                    />
+                                </DashboardCard>
 
                                 {/* Zone Comparison */}
-                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <BarChart3 className="w-3.5 h-3.5 text-blue-400" />
-                                        <span className="text-xs font-medium text-text-color/90">Zone Overview</span>
-                                    </div>
-                                    <div className="h-[150px] overflow-hidden">
-                                        <ZoneComparisonChart
-                                            detectionData={job.detectionData}
-                                            dwellData={job.dwellData}
-                                            zones={job.zones}
-                                        />
-                                    </div>
-                                </div>
+                                <DashboardCard
+                                    title="Zone Overview"
+                                    icon={<BarChart3 className="w-3.5 h-3.5 text-blue-400" />}
+                                    tooltip="Compare total visitors, peak occupancy, and average dwell time across zones."
+                                    contentClassName="h-[150px] overflow-hidden"
+                                >
+                                    <ZoneComparisonChart
+                                        detectionData={job.detectionData}
+                                        dwellData={job.dwellData}
+                                        zones={job.zones}
+                                    />
+                                </DashboardCard>
 
                                 {/* Cumulative Flow Chart */}
-                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <TrendingUp className="w-3.5 h-3.5 text-green-400" />
-                                        <span className="text-xs font-medium text-text-color/90">Net Flow Over Time</span>
-                                    </div>
-                                    <div className="h-[120px] overflow-hidden">
-                                        <CumulativeFlowChart
-                                            detectionData={job.detectionData}
-                                            lineCrossingData={job.lineCrossingData}
-                                            zones={job.zones}
-                                            duration={job.processTime}
-                                        />
-                                    </div>
-                                </div>
+                                <DashboardCard
+                                    title="Net Flow Over Time"
+                                    icon={<TrendingUp className="w-3.5 h-3.5 text-green-400" />}
+                                    tooltip="Tracks the cumulative difference between entries and exits over time."
+                                    contentClassName="h-[120px] overflow-hidden"
+                                >
+                                    <CumulativeFlowChart
+                                        detectionData={job.detectionData}
+                                        lineCrossingData={job.lineCrossingData}
+                                        zones={job.zones}
+                                        duration={job.processTime}
+                                    />
+                                </DashboardCard>
 
                                 {/* Traffic Flow */}
-                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <ArrowLeftRight className="w-3.5 h-3.5 text-purple-400" />
-                                        <span className="text-xs font-medium text-text-color/90">Entry / Exit</span>
-                                    </div>
-                                    <div className="h-[150px] overflow-hidden">
-                                        <TrafficFlowChart
-                                            lineCrossingData={job.lineCrossingData}
-                                            zones={job.zones}
-                                        />
-                                    </div>
-                                </div>
+                                <DashboardCard
+                                    title="Entry / Exit"
+                                    icon={<ArrowLeftRight className="w-3.5 h-3.5 text-purple-400" />}
+                                    tooltip="Total count of objects entering vs. exiting the zones."
+                                    contentClassName="h-[150px] overflow-hidden"
+                                >
+                                    <TrafficFlowChart
+                                        lineCrossingData={job.lineCrossingData}
+                                        zones={job.zones}
+                                    />
+                                </DashboardCard>
 
                                 {/* Occupancy Stacked */}
-                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Layers className="w-3.5 h-3.5 text-indigo-400" />
-                                        <span className="text-xs font-medium text-text-color/90">Zone Loads</span>
-                                    </div>
-                                    <div className="h-[120px] overflow-hidden">
-                                        <OccupancyStackedChart
-                                            data={job.detectionData}
-                                            zones={job.zones}
-                                            duration={job.processTime}
-                                        />
-                                    </div>
-                                </div>
+                                <DashboardCard
+                                    title="Zone Loads"
+                                    icon={<Layers className="w-3.5 h-3.5 text-indigo-400" />}
+                                    tooltip="Shows how occupancy is distributed across zones at any given time."
+                                    contentClassName="h-[120px] overflow-hidden"
+                                >
+                                    <OccupancyStackedChart
+                                        data={job.detectionData}
+                                        zones={job.zones}
+                                        duration={job.processTime}
+                                    />
+                                </DashboardCard>
 
 
 
                                 {/* Dwell Distribution */}
-                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Timer className="w-3.5 h-3.5 text-amber-400" />
-                                        <span className="text-xs font-medium text-text-color/90">Dwell Segments</span>
-                                    </div>
-                                    <div className="h-[120px] overflow-hidden">
-                                        <DwellDistributionChart data={job.dwellData} />
-                                    </div>
-                                </div>
+                                <DashboardCard
+                                    title="Dwell Segments"
+                                    icon={<Timer className="w-3.5 h-3.5 text-amber-400" />}
+                                    tooltip="Categorizes visits based on their duration."
+                                    contentClassName="h-[120px] overflow-hidden"
+                                >
+                                    <DwellDistributionChart data={job.dwellData} />
+                                </DashboardCard>
 
                                 {/* Bounce Rate */}
-                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <MousePointerClick className="w-3.5 h-3.5 text-red-400" />
-                                        <span className="text-xs font-medium text-text-color/90">Bounce Rate</span>
-                                    </div>
-                                    <div className="h-[200px] overflow-hidden">
-                                        <BounceRateChart
-                                            dwellData={job.dwellData}
-                                            zones={job.zones}
-                                        />
-                                    </div>
-                                </div>
+                                <DashboardCard
+                                    title="Bounce Rate"
+                                    icon={<MousePointerClick className="w-3.5 h-3.5 text-red-400" />}
+                                    tooltip="Percentage of visits shorter than 1 second (fleeting detections)."
+                                    contentClassName="h-[200px] overflow-hidden"
+                                >
+                                    <BounceRateChart
+                                        dwellData={job.dwellData}
+                                        zones={job.zones}
+                                    />
+                                </DashboardCard>
 
                                 {/* Class Breakdown */}
-                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <PieChart className="w-3.5 h-3.5 text-pink-400" />
-                                        <span className="text-xs font-medium text-text-color/90">Class Distribution</span>
-                                    </div>
-                                    <div className="h-[180px] overflow-hidden">
-                                        <ClassBreakdownChart zones={job.zones} />
-                                    </div>
-                                </div>
+                                <DashboardCard
+                                    title="Class Distribution"
+                                    icon={<PieChart className="w-3.5 h-3.5 text-pink-400" />}
+                                    tooltip="Proportion of different object classes detected."
+                                    contentClassName="h-[180px] overflow-hidden"
+                                >
+                                    <ClassBreakdownChart zones={job.zones} />
+                                </DashboardCard>
                             </div>
                         </BentoCard>
                     </div>
