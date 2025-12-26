@@ -6,6 +6,8 @@ import { useTheme } from "next-themes";
 import { Sun, Moon, Trash2 } from "lucide-react";
 import { api } from "@/utils/api";
 
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+
 interface HeaderProps {
     children?: React.ReactNode;
 }
@@ -18,6 +20,7 @@ export function Header({ children }: HeaderProps) {
         name: string;
     } | null>(null);
     const [isClearing, setIsClearing] = useState(false);
+    const [showClearDialog, setShowClearDialog] = useState(false);
 
     useEffect(() => {
         setTimeout(() => setMounted(true), 0);
@@ -37,22 +40,25 @@ export function Header({ children }: HeaderProps) {
         setTheme(resolvedTheme === "dark" ? "light" : "dark");
     };
 
-    const handleClearCache = async () => {
-        if (!confirm("Are you sure you want to clear all cached data? This will delete all jobs, videos, and results.")) {
-            return;
-        }
+    const handleClearClick = () => {
+        setShowClearDialog(true);
+    };
 
+    const performClear = async () => {
         setIsClearing(true);
         try {
             const result = await api.clearAllJobs();
             if (result.success) {
-                alert(`Successfully cleared ${result.deleted_count} job(s)`);
-                // Refresh the page to update any job lists
-                window.location.reload();
+                // Short delay to show success state if we had a toast
+                setShowClearDialog(false);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
             }
         } catch (error) {
             console.error("Failed to clear cache:", error);
             alert("Failed to clear cache. Please try again.");
+            setShowClearDialog(false);
         } finally {
             setIsClearing(false);
         }
@@ -85,6 +91,19 @@ export function Header({ children }: HeaderProps) {
 
     return (
         <header className="flex justify-between items-center py-2.5 px-3 bg-transparent">
+            {/* Dialogs */}
+            <ConfirmDialog
+                isOpen={showClearDialog}
+                onClose={() => setShowClearDialog(false)}
+                onConfirm={performClear}
+                title="Clear all data?"
+                description="This action cannot be undone. This will permanently delete all processed videos, job history, and analysis data from the server."
+                confirmText="Clear All Data"
+                cancelText="Cancel"
+                variant="destructive"
+                isLoading={isClearing}
+            />
+
             <Link href="/" className="no-underline">
                 <div className="text-lg font-semibold text-text-color tracking-tight font-mono">
                     ZoneNet
@@ -107,12 +126,12 @@ export function Header({ children }: HeaderProps) {
                 {/* Clear Cache Button */}
                 {mounted && (
                     <button
-                        onClick={handleClearCache}
-                        disabled={isClearing}
-                        className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-btn-hover transition-colors text-text-color cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={handleClearClick}
+                        className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-red-500/10 hover:text-red-500 transition-colors text-text-color cursor-pointer"
                         title="Clear Cache"
+                        aria-label="Clear Cache"
                     >
-                        <Trash2 className={`w-5 h-5 ${isClearing ? "animate-pulse" : ""}`} />
+                        <Trash2 className="w-5 h-5" />
                     </button>
                 )}
 
