@@ -26,3 +26,4 @@ backend/weights/*.pt
 .DS_Store
 .vscode/
 .idea/
+frontend/public/media/outputs
