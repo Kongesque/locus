@@ -70,7 +70,7 @@ export function ZoneCanvas({
 
         const scaleX = containerWidth / img.width;
         const scaleY = containerHeight / img.height;
-        const newScale = Math.min(scaleX, scaleY, 1);
+        const newScale = Math.min(scaleX, scaleY);
 
         canvas.width = img.width * newScale;
         canvas.height = img.height * newScale;
@@ -79,11 +79,21 @@ export function ZoneCanvas({
     }, []);
 
     useEffect(() => {
-        if (imageLoaded) {
+        if (!imageLoaded || !containerRef.current) return;
+
+        // Initial update
+        updateCanvasSize();
+
+        // Use ResizeObserver for robust responsiveness
+        const resizeObserver = new ResizeObserver(() => {
             updateCanvasSize();
-            window.addEventListener("resize", updateCanvasSize);
-            return () => window.removeEventListener("resize", updateCanvasSize);
-        }
+        });
+
+        resizeObserver.observe(containerRef.current);
+
+        return () => {
+            resizeObserver.disconnect();
+        };
     }, [imageLoaded, updateCanvasSize]);
 
     // Helpers for hit detection
