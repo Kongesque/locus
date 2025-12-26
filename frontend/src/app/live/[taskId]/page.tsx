@@ -5,7 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/utils/api";
 import { LoadingOverlay } from "@/components/layout";
-import { Square } from "lucide-react";
+import { Square, Play, Info, Monitor, Activity, Clock, Settings, RefreshCw, Users, TrendingUp, ArrowUp, ArrowDown } from "lucide-react";
+import { BentoCard } from "@/components/dashboard/BentoGrid";
+import DashboardCard from "@/components/dashboard/DashboardCard";
 
 export default function LivePage() {
     const params = useParams();
@@ -22,12 +24,25 @@ export default function LivePage() {
     const [isStreamReady, setIsStreamReady] = useState(false);
     const retryCountRef = useRef(0);
     const maxRetries = 3;
+    const [startTime] = useState<Date>(new Date());
+    const [elapsedTime, setElapsedTime] = useState(0);
 
     const { data: job, isLoading } = useQuery({
         queryKey: ["job", taskId],
         queryFn: () => api.getJob(taskId),
         enabled: !!taskId,
     });
+
+    // Elapsed time counter
+    useEffect(() => {
+        if (!isRunning || connectionStatus !== "live") return;
+
+        const interval = setInterval(() => {
+            setElapsedTime(Math.floor((Date.now() - startTime.getTime()) / 1000));
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [isRunning, connectionStatus, startTime]);
 
     // WebSocket connection for live stream with retry logic
     useEffect(() => {
@@ -133,6 +148,21 @@ export default function LivePage() {
         }
     };
 
+    const handleRestart = () => {
+        setIsRunning(true);
+        setConnectionStatus("connecting");
+        retryCountRef.current = 0;
+    };
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    // Calculate total count across all zones
+    const totalCount = Object.values(counts).reduce((sum, count) => sum + count, 0);
+
     if (isLoading) {
         return <LoadingOverlay message="Loading stream..." />;
     }
@@ -150,8 +180,33 @@ export default function LivePage() {
         return (
             <div className="flex-1 flex items-center justify-center">
                 <div className="flex flex-col items-center">
+                    <div className="relative w-24 h-24 mb-4">
+                        <svg className="w-full h-full -rotate-90 animate-spin" style={{ animationDuration: '3s' }} viewBox="0 0 100 100">
+                            <circle
+                                className="stroke-gray-400/20"
+                                cx="50"
+                                cy="50"
+                                r="42"
+                                fill="none"
+                                strokeWidth="6"
+                            />
+                            <circle
+                                className="stroke-text-color"
+                                cx="50"
+                                cy="50"
+                                r="42"
+                                fill="none"
+                                strokeWidth="6"
+                                strokeLinecap="round"
+                                strokeDasharray="80 184"
+                            />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                        </div>
+                    </div>
                     <p className="text-lg font-medium text-text-color">
-                        Connecting to stream<span className="animate-pulse">...</span>
+                        Connecting<span className="animate-pulse">...</span>
                     </p>
                     <span className="text-base text-secondary-text mt-1">
                         {job.sourceType === "webcam" ? "Opening webcam" : "Connecting to RTSP stream"}
@@ -162,130 +217,337 @@ export default function LivePage() {
     }
 
     return (
-        <main className="flex-1 flex flex-col p-4 overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                    {/* Status Indicator */}
-                    <div
-                        className={`w-3 h-3 rounded-full ${connectionStatus === "live"
-                            ? "bg-green-500 animate-pulse"
-                            : connectionStatus === "connecting"
-                                ? "bg-yellow-500 animate-pulse"
-                                : "bg-gray-500"
-                            }`}
-                    />
-                    <h1 className="text-xl font-semibold text-text-color">
-                        {connectionStatus === "live"
-                            ? "Live"
-                            : connectionStatus === "connecting"
-                                ? "Connecting..."
-                                : "Stopped"}
-                    </h1>
-                    <span className="text-sm text-secondary-text">
-                        {job.sourceType === "webcam" ? "Webcam" : "RTSP Stream"}
-                    </span>
-                </div>
+        <main className="h-full w-full overflow-auto bg-background text-text-color p-4">
+            <div className="flex flex-col gap-4 min-h-full">
+                {/* Row 1: Video + Live Stats */}
+                <div className="grid grid-cols-12 gap-4">
+                    {/* Main Video Tile - Spans 8 cols */}
+                    <BentoCard
+                        className="col-span-8 aspect-video p-0"
+                        title="Live Feed"
+                        icon={
+                            <div className={`w-2 h-2 rounded-full ${connectionStatus === "live"
+                                ? "bg-green-500 animate-pulse"
+                                : connectionStatus === "connecting"
+                                    ? "bg-yellow-500 animate-pulse"
+                                    : "bg-gray-500"
+                                }`} />
+                        }
+                        noScroll
+                        noSpacer
+                        darkHeader
+                        headerAction={
+                            <div className="flex items-center gap-2">
+                                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${connectionStatus === "live"
+                                    ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                                    : connectionStatus === "connecting"
+                                        ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                                        : "bg-gray-500/20 text-gray-400 border border-gray-500/30"
+                                    }`}>
+                                    {connectionStatus === "live" ? "LIVE" : connectionStatus === "connecting" ? "CONNECTING" : "STOPPED"}
+                                </span>
+                            </div>
+                        }
+                    >
+                        <div className="relative w-full h-full bg-black flex items-center justify-center">
+                            {frame ? (
+                                <img
+                                    src={frame}
+                                    alt="Live stream"
+                                    className="w-full h-full object-contain"
+                                />
+                            ) : (
+                                <div className="text-secondary-text flex flex-col items-center gap-2">
+                                    <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center">
+                                        <Play className="w-6 h-6 text-gray-500" />
+                                    </div>
+                                    <span>
+                                        {connectionStatus === "connecting"
+                                            ? "Connecting to stream..."
+                                            : "Stream stopped"}
+                                    </span>
+                                </div>
+                            )}
 
-                <button
-                    onClick={handleStop}
-                    disabled={!isRunning}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${isRunning
-                        ? "bg-delete-text text-white hover:bg-delete-text/80"
-                        : "bg-gray-500 text-gray-300 cursor-not-allowed"
-                        }`}
-                >
-                    <Square className="w-4 h-4" />
-                    Stop Stream
-                </button>
-            </div>
-
-            <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
-                {/* Video Feed */}
-                <div className="flex-1 bg-primary-color border border-primary-border rounded-xl overflow-hidden flex items-center justify-center">
-                    {frame ? (
-                        <img
-                            src={frame}
-                            alt="Live stream"
-                            className="max-w-full max-h-full object-contain"
-                        />
-                    ) : (
-                        <div className="text-secondary-text">
-                            {connectionStatus === "connecting"
-                                ? "Connecting to stream..."
-                                : "Stream stopped"}
+                            {/* Elapsed Time Overlay */}
+                            {connectionStatus === "live" && (
+                                <div className="absolute bottom-3 left-3 flex items-center gap-2 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-sm">
+                                    <Clock className="w-3 h-3 text-white/70" />
+                                    <span className="text-xs font-mono text-white/90">{formatTime(elapsedTime)}</span>
+                                </div>
+                            )}
                         </div>
-                    )}
-                </div>
+                    </BentoCard>
 
-                {/* Stats Sidebar */}
-                <div className="w-full lg:w-72 bg-primary-color border border-primary-border rounded-xl p-4 overflow-y-auto">
-                    <h2 className="text-sm font-semibold text-text-color mb-4">
-                        Live Counts
-                    </h2>
-
-                    {/* Zone Counts */}
-                    <div className="space-y-3">
-                        {job.zones?.map((zone) => {
-                            const count = counts[zone.id] || 0;
-                            const isLine = zone.points?.length === 2;
-
-                            return (
-                                <div
-                                    key={zone.id}
-                                    className="bg-btn-bg border border-btn-border rounded-lg p-3"
+                    {/* Live Stats - Right Sidebar (4 cols) */}
+                    <div className="col-span-4 relative">
+                        <BentoCard
+                            className="!absolute inset-0"
+                            title="Live Analytics"
+                            headerAction={
+                                <button
+                                    onClick={isRunning ? handleStop : handleRestart}
+                                    className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium transition-all ${isRunning
+                                        ? "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"
+                                        : "bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30"
+                                        }`}
                                 >
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <div
-                                            className="w-3 h-3 rounded-full"
-                                            style={{
-                                                backgroundColor: `rgb(${zone.color?.join(",")})`,
-                                            }}
-                                        />
-                                        <span className="text-sm font-medium text-text-color">
-                                            {zone.label}
-                                        </span>
+                                    {isRunning ? (
+                                        <>
+                                            <Square className="w-3 h-3" />
+                                            Stop
+                                        </>
+                                    ) : (
+                                        <>
+                                            <RefreshCw className="w-3 h-3" />
+                                            Restart
+                                        </>
+                                    )}
+                                </button>
+                            }
+                        >
+                            <div className="space-y-2 px-2 pb-4 pt-1">
+                                {/* Stream Info Card */}
+                                <div className="bg-card-bg rounded-md p-3">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Info className="w-3.5 h-3.5 text-blue-400" />
+                                        <span className="text-xs font-semibold text-text-color tracking-tight uppercase">Stream Info</span>
                                     </div>
 
-                                    <p className="text-3xl font-bold text-text-color text-center">
-                                        {count}
-                                    </p>
-                                    <p className="text-xs text-secondary-text text-center">
-                                        {isLine ? "Crossings" : "In Zone"}
-                                    </p>
+                                    <div className="space-y-2">
+                                        {/* Metadata */}
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-1.5 mb-1.5">
+                                                <Monitor className="w-3 h-3 text-secondary-text" />
+                                                <span className="text-[10px] font-bold text-secondary-text uppercase tracking-widest">Connection</span>
+                                            </div>
+                                            <div className="space-y-1.5 text-xs">
+                                                <div className="flex justify-between items-center h-4">
+                                                    <span className="text-secondary-text">Source</span>
+                                                    <span className={`px-1.5 py-0.5 rounded-sm text-[10px] font-medium leading-none ${job.sourceType === 'rtsp' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
+                                                        job.sourceType === 'webcam' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                                                            'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                                        }`}>
+                                                        {job.sourceType === 'rtsp' ? 'RTSP STREAM' :
+                                                            job.sourceType === 'webcam' ? 'WEBCAM' :
+                                                                'LOCAL FILE'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center h-4">
+                                                    <span className="text-secondary-text">Resolution</span>
+                                                    <span className="font-mono text-text-color">{job.frameWidth} × {job.frameHeight}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center h-4">
+                                                    <span className="text-secondary-text">Engine</span>
+                                                    <span className="px-1.5 py-0.5 rounded-sm bg-btn-bg text-secondary-text text-[10px] font-mono border border-primary-border uppercase">
+                                                        {job.model?.replace('.pt', '') || "YOLOv8"}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center h-4">
+                                                    <span className="text-secondary-text">Confidence</span>
+                                                    <span className="font-mono text-text-color">
+                                                        {(job.confidence > 1 ? job.confidence : job.confidence * 100).toFixed(0)}%
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center h-4">
+                                                    <span className="text-secondary-text">Session Time</span>
+                                                    <span className="font-mono text-text-color">{formatTime(elapsedTime)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            );
-                        })}
-                    </div>
 
-                    {/* Actions */}
-                    {!isRunning && (
-                        <div className="mt-4 space-y-2">
+                                {/* Total Activity Summary */}
+                                <DashboardCard
+                                    title="Total Activity"
+                                    icon={<Activity className="w-3.5 h-3.5 text-blue-400" />}
+                                    tooltip="Total count of all detections across all zones."
+                                    contentClassName="h-[60px]"
+                                >
+                                    <div className="flex items-center justify-center h-full">
+                                        <div className="text-center">
+                                            <p className="text-4xl font-bold text-text-color tabular-nums">{totalCount}</p>
+                                            <p className="text-[10px] text-secondary-text uppercase tracking-wider mt-1">Total Detections</p>
+                                        </div>
+                                    </div>
+                                </DashboardCard>
+
+                                {/* Zone Counts */}
+                                <DashboardCard
+                                    title="Zone Breakdown"
+                                    icon={<Users className="w-3.5 h-3.5 text-green-400" />}
+                                    tooltip="Real-time count per zone."
+                                    contentClassName="max-h-[280px] overflow-y-auto"
+                                >
+                                    <div className="space-y-2">
+                                        {job.zones?.map((zone) => {
+                                            const count = counts[zone.id] || 0;
+                                            const isLine = zone.points?.length === 2;
+
+                                            return (
+                                                <div
+                                                    key={zone.id}
+                                                    className="bg-btn-bg/50 border border-primary-border rounded-lg p-3 hover:bg-btn-hover transition-colors"
+                                                >
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <div
+                                                                className="w-2.5 h-2.5 rounded-full"
+                                                                style={{
+                                                                    backgroundColor: `rgb(${zone.color?.join(",")})`,
+                                                                }}
+                                                            />
+                                                            <span className="text-sm font-medium text-text-color">
+                                                                {zone.label}
+                                                            </span>
+                                                            <span className="text-[10px] text-secondary-text px-1.5 py-0.5 rounded bg-btn-bg border border-primary-border">
+                                                                {isLine ? "Line" : "Zone"}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1">
+                                                            {count > 0 && (
+                                                                <TrendingUp className="w-3 h-3 text-green-400" />
+                                                            )}
+                                                            <span className="text-xl font-bold text-text-color tabular-nums">
+                                                                {count}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-[10px] text-secondary-text mt-1">
+                                                        {isLine ? "Crossings detected" : "Currently in zone"}
+                                                    </p>
+                                                </div>
+                                            );
+                                        })}
+
+                                        {(!job.zones || job.zones.length === 0) && (
+                                            <div className="text-center py-4 text-secondary-text text-sm">
+                                                No zones configured
+                                            </div>
+                                        )}
+                                    </div>
+                                </DashboardCard>
+                            </div>
+                        </BentoCard>
+                    </div>
+                </div>
+
+                {/* Row 2: Zone Analysis Cards + Actions */}
+                <div className="flex-1 grid grid-cols-12 gap-4 min-h-0">
+                    {/* Zone Cards - Bottom Left (8 cols) */}
+                    <BentoCard className="col-span-8 min-h-0">
+                        <div className="grid grid-cols-3 gap-3 px-2 py-2 h-full">
+                            {job.zones?.map((zone) => {
+                                const count = counts[zone.id] || 0;
+                                const isLine = zone.points?.length === 2;
+
+                                return (
+                                    <div
+                                        key={zone.id}
+                                        className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors group flex flex-col"
+                                    >
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <div
+                                                    className="w-2 h-2 rounded-full"
+                                                    style={{ backgroundColor: `rgb(${zone.color?.join(",")})` }}
+                                                />
+                                                <span className="text-sm font-medium text-text-color/90 truncate max-w-[100px]">
+                                                    {zone.label}
+                                                </span>
+                                            </div>
+                                            {connectionStatus === "live" && (
+                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                            )}
+                                        </div>
+
+                                        {/* Live Count Visual */}
+                                        <div className="flex-1 flex items-center justify-center py-2">
+                                            <div className="text-center">
+                                                <p className="text-4xl font-bold text-text-color tabular-nums leading-none">
+                                                    {count}
+                                                </p>
+                                                <p className="text-[10px] text-secondary-text uppercase tracking-wider mt-1">
+                                                    {isLine ? "Crossings" : "In Zone"}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Zone Type Badge */}
+                                        <div className="mt-auto pt-2 border-t border-white/5">
+                                            <div className="flex items-center justify-between text-[10px]">
+                                                <span className="text-secondary-text">Type</span>
+                                                <span className={`px-1.5 py-0.5 rounded-sm font-medium ${isLine
+                                                    ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                                                    : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                                                    }`}>
+                                                    {isLine ? "LINE" : "ZONE"}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
+                            {(!job.zones || job.zones.length === 0) && (
+                                <div className="col-span-3 flex items-center justify-center text-secondary-text">
+                                    <div className="text-center">
+                                        <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                        <p className="text-sm">No zones configured</p>
+                                        <p className="text-xs mt-1">Edit zones to start tracking</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </BentoCard>
+
+                    {/* Control Panel - Spans 4 cols */}
+                    <BentoCard className="col-span-4" noScroll>
+                        <div className="flex flex-col h-full px-2 justify-center gap-3 text-text-color">
+
+                            {/* Primary Action - Stop/Start */}
+                            <button
+                                onClick={isRunning ? handleStop : handleRestart}
+                                className={`w-full py-3 flex items-center justify-center gap-2 rounded-lg text-sm font-bold transition-all group shadow-sm ${isRunning
+                                    ? "bg-red-500 text-white hover:bg-red-600"
+                                    : "bg-green-500 text-white hover:bg-green-600"
+                                    }`}
+                            >
+                                {isRunning ? (
+                                    <>
+                                        <Square className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                        Stop Stream
+                                    </>
+                                ) : (
+                                    <>
+                                        <RefreshCw className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                        Restart Stream
+                                    </>
+                                )}
+                            </button>
+
+                            {/* Edit Zones */}
                             <button
                                 onClick={() => router.push(`/zone/${taskId}`)}
-                                className="w-full btn-secondary"
+                                className="w-full py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-xs font-medium transition-all flex items-center justify-center gap-2"
                             >
-                                Edit Zones
+                                <Settings className="w-3.5 h-3.5" />
+                                Edit Zones & Configuration
                             </button>
+
+                            {/* New Session */}
                             <button
                                 onClick={() => router.push("/")}
-                                className="w-full btn-primary"
+                                className="w-full py-2 rounded-lg bg-btn-bg hover:bg-btn-hover border border-primary-border text-xs font-medium transition-all text-text-color flex items-center justify-center gap-2"
                             >
+                                <Play className="w-3.5 h-3.5" />
                                 New Session
                             </button>
                         </div>
-                    )}
+                    </BentoCard>
                 </div>
             </div>
-
-            {/* Footer Info */}
-            <footer className="mt-4 flex justify-between text-sm text-secondary-text">
-                <span>
-                    Resolution: {job.frameWidth}×{job.frameHeight}
-                </span>
-                <span>Model: {job.model?.replace(".pt", "")}</span>
-                <span>Confidence: {job.confidence}%</span>
-            </footer>
         </main>
     );
 }
