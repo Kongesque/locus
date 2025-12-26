@@ -19,6 +19,8 @@ export default function LivePage() {
     >("connecting");
     const wsRef = useRef<WebSocket | null>(null);
     const [frame, setFrame] = useState<string | null>(null);
+    const retryCountRef = useRef(0);
+    const maxRetries = 3;
 
     const { data: job, isLoading } = useQuery({
         queryKey: ["job", taskId],
@@ -26,61 +28,89 @@ export default function LivePage() {
         enabled: !!taskId,
     });
 
-    // WebSocket connection for live stream
+    // WebSocket connection for live stream with retry logic
     useEffect(() => {
         if (!taskId || !isRunning) return;
 
-        const ws = new WebSocket(api.getWebSocketUrl(taskId));
-        wsRef.current = ws;
+        const connectWebSocket = () => {
+            const ws = new WebSocket(api.getWebSocketUrl(taskId));
+            wsRef.current = ws;
 
-        ws.onopen = () => {
-            setConnectionStatus("live");
-        };
+            ws.onopen = () => {
+                setConnectionStatus("live");
+                retryCountRef.current = 0; // Reset retry count on successful connection
+            };
 
-        ws.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                if (data.type === "frame") {
-                    setFrame(`data:image/jpeg;base64,${data.frame}`);
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === "frame") {
+                        setFrame(`data:image/jpeg;base64,${data.frame}`);
+                    }
+                    if (data.counts) {
+                        setCounts(data.counts);
+                    }
+                    // Handle error messages from backend
+                    if (data.error) {
+                        console.error("Stream error:", data.error);
+                    }
+                } catch {
+                    // Handle raw frame data
+                    if (event.data instanceof Blob) {
+                        const url = URL.createObjectURL(event.data);
+                        setFrame(url);
+                    }
                 }
-                if (data.counts) {
-                    setCounts(data.counts);
+            };
+
+            ws.onerror = () => {
+                // Don't immediately mark as stopped, try to reconnect
+                if (retryCountRef.current < maxRetries) {
+                    retryCountRef.current++;
+                    setTimeout(connectWebSocket, 1000); // Retry after 1 second
+                } else {
+                    setConnectionStatus("stopped");
                 }
-            } catch {
-                // Handle raw frame data
-                if (event.data instanceof Blob) {
-                    const url = URL.createObjectURL(event.data);
-                    setFrame(url);
+            };
+
+            ws.onclose = () => {
+                // Only mark as stopped if we've exhausted retries or user stopped it
+                if (retryCountRef.current >= maxRetries || !isRunning) {
+                    setConnectionStatus("stopped");
+                    setIsRunning(false);
+                } else if (isRunning) {
+                    // Try to reconnect
+                    retryCountRef.current++;
+                    setTimeout(connectWebSocket, 1000);
                 }
-            }
+            };
         };
 
-        ws.onerror = () => {
-            setConnectionStatus("stopped");
-        };
-
-        ws.onclose = () => {
-            setConnectionStatus("stopped");
-            setIsRunning(false);
-        };
+        connectWebSocket();
 
         return () => {
-            ws.close();
+            if (wsRef.current) {
+                wsRef.current.close();
+            }
         };
     }, [taskId, isRunning]);
 
-    // Poll for counts as fallback
+    // Poll for counts as fallback (don't immediately stop on first poll)
     useEffect(() => {
         if (!taskId || !isRunning) return;
 
+        let pollCount = 0;
         const pollCounts = async () => {
             try {
                 const data = await api.getLiveCounts(taskId);
                 setCounts(data.counts);
-                if (!data.running) {
+                // Only stop if stream reports not running AND we've polled a few times
+                // This gives time for the backend to start
+                if (!data.running && pollCount > 5) {
                     setIsRunning(false);
                     setConnectionStatus("stopped");
                 }
+                pollCount++;
             } catch {
                 // Ignore errors
             }
