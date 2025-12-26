@@ -132,7 +132,7 @@ export function ZoneCanvas({
         return null;
     }, [zones]);
 
-    // Draw canvas content with preview line
+    // Draw canvas content with premium UX
     const drawCanvas = useCallback(() => {
         const canvas = canvasRef.current;
         const ctx = canvas?.getContext("2d");
@@ -145,6 +145,32 @@ export function ZoneCanvas({
 
         // Draw background image
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // Helper to draw vertices
+        const drawVertex = (x: number, y: number, color: string, isActive: boolean, isHovered: boolean, isStart: boolean = false) => {
+            const baseRadius = isActive ? 5 : 4;
+            const radius = isHovered ? baseRadius + 2 : baseRadius;
+
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+
+            // White fill, colored border (Premium look)
+            ctx.fillStyle = "#ffffff";
+            ctx.fill();
+
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = color;
+            ctx.stroke();
+
+            // Additional ring for start point (Magnetic target) or hovered
+            if (isStart || isHovered) {
+                ctx.beginPath();
+                ctx.arc(x, y, radius + 3, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(255, 255, 255, 0.5)`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        };
 
         // Draw all zones
         zones.forEach((zone) => {
@@ -160,125 +186,140 @@ export function ZoneCanvas({
                 y: p.y * scale,
             }));
 
-            // Quality settings
+            // --- DOUBLE STROKE SYSTEM (Visibility on any background) ---
+
             ctx.lineJoin = "round";
             ctx.lineCap = "round";
 
-            // Draw lines between points
-            ctx.strokeStyle = color;
-            ctx.lineWidth = isActive ? 5 : 3;
-            ctx.setLineDash([]);
-
-            // Glow/Shadow effect for active or hovered
-            if (isActive || isHovered) {
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = color;
-            } else {
-                ctx.shadowBlur = 0;
-            }
-
-            ctx.beginPath();
-            ctx.moveTo(scaledPoints[0].x, scaledPoints[0].y);
-
-            for (let i = 1; i < scaledPoints.length; i++) {
-                ctx.lineTo(scaledPoints[i].x, scaledPoints[i].y);
-            }
-
-            // Close polygon if it has 3+ points and is not actively being drawn
-            // (active zone stays open so user can add more points)
-            if (zone.points.length >= 3 && !isActive) {
-                ctx.closePath();
-            }
-            ctx.stroke();
-
-            // Fill with semi-transparent color
+            // 1. Draw Fill (Active/Hovered only)
             if (zone.points.length >= 3) {
-                const alpha = (isActive || isHovered) ? 0.25 : 0.1;
+                const alpha = (isActive || isHovered) ? 0.25 : 0.15;
                 ctx.fillStyle = color.replace(")", `, ${alpha})`).replace("hsl", "hsla");
+                ctx.beginPath();
+                ctx.moveTo(scaledPoints[0].x, scaledPoints[0].y);
+                for (let i = 1; i < scaledPoints.length; i++) {
+                    ctx.lineTo(scaledPoints[i].x, scaledPoints[i].y);
+                }
+                // Close polygon logic for fill
+                if (zone.points.length >= 3 && !isActive) {
+                    ctx.closePath();
+                }
                 ctx.fill();
             }
 
-            // Reset shadow for points
-            ctx.shadowBlur = 0;
-
-            // Draw points
-            scaledPoints.forEach((point, idx) => {
-                const isPointHovered = hoveredPoint?.zoneId === zone.id && hoveredPoint?.index === idx;
-                const isPointDragged = draggedPoint?.zoneId === zone.id && draggedPoint?.index === idx;
-
+            // 2. Outer Contrast Stroke (White/Black glow)
+            // Only draw if we have points and lines
+            if (scaledPoints.length > 1) {
                 ctx.beginPath();
-                const radius = (isActive || isPointHovered || isPointDragged) ? 8 : 6;
-                ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
-
-                // Point fill
-                ctx.fillStyle = color;
-                ctx.fill();
-
-                // Point border
-                ctx.strokeStyle = "#fff";
-                ctx.lineWidth = (isPointHovered || isPointDragged) ? 3 : 2;
-                ctx.stroke();
-
-                // Hover halo
-                if (isPointHovered || isPointDragged) {
-                    ctx.beginPath();
-                    ctx.arc(point.x, point.y, radius + 4, 0, Math.PI * 2);
-                    ctx.strokeStyle = color.replace(")", ", 0.4)").replace("hsl", "hsla");
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
+                ctx.moveTo(scaledPoints[0].x, scaledPoints[0].y);
+                for (let i = 1; i < scaledPoints.length; i++) {
+                    ctx.lineTo(scaledPoints[i].x, scaledPoints[i].y);
+                }
+                if (zone.points.length >= 3 && !isActive) {
+                    ctx.closePath();
                 }
 
-                // Draw point number
-                ctx.fillStyle = "#fff";
-                ctx.font = `bold ${radius > 6 ? 11 : 9}px sans-serif`;
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillText(String(idx + 1), point.x, point.y);
+                ctx.lineWidth = isActive ? 5 : 3;
+                ctx.strokeStyle = "rgba(0,0,0,0.5)"; // Dark outer glow for depth
+                ctx.stroke();
+
+                // 3. Inner Color Stroke
+                ctx.lineWidth = isActive ? 3 : 2;
+                ctx.strokeStyle = color;
+                ctx.stroke();
+            }
+
+            // Draw Vertices
+            scaledPoints.forEach((point, idx) => {
+                const isPointHovered = hoveredPoint?.zoneId === zone.id && hoveredPoint?.index === idx;
+                const isStartPoint = idx === 0 && isActive && zone.points.length >= 3; // Highlight start point if closing is possible
+
+                drawVertex(point.x, point.y, color, isActive, isPointHovered, isStartPoint);
+
+                // Show numbers only on hover or for start/end
+                if (isPointHovered || idx === 0 || idx === scaledPoints.length - 1) {
+                    // Small number pill
+                    ctx.font = "10px sans-serif";
+                    ctx.fillStyle = "rgba(0,0,0,0.7)";
+                    const text = String(idx + 1);
+                    const metrics = ctx.measureText(text);
+                    const pillWidth = metrics.width + 8;
+
+                    // Draw number pill offset from point
+                    const pillX = point.x + 12;
+                    const pillY = point.y - 12;
+
+                    ctx.beginPath();
+                    ctx.roundRect(pillX, pillY, pillWidth, 14, 4);
+                    ctx.fill();
+
+                    ctx.fillStyle = "#fff";
+                    ctx.textAlign = "left";
+                    ctx.textBaseline = "top";
+                    ctx.fillText(text, pillX + 4, pillY + 2);
+                }
             });
 
-            // Draw zone label
+            // Draw Zone Label (Top-Left of first point)
             if (scaledPoints.length > 0) {
                 const labelPoint = scaledPoints[0];
-                ctx.fillStyle = color;
                 ctx.font = "bold 13px sans-serif";
-                ctx.textAlign = "left";
-
-                // Label background
                 const labelText = zone.label;
                 const metrics = ctx.measureText(labelText);
-                ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
-                ctx.fillRect(labelPoint.x + 12, labelPoint.y - 22, metrics.width + 8, 20);
 
                 ctx.fillStyle = color;
-                ctx.fillText(labelText, labelPoint.x + 16, labelPoint.y - 8);
+                // Background for label
+                ctx.fillRect(labelPoint.x, labelPoint.y - 24, metrics.width + 12, 20);
+
+                // High contrast text based on color brightness? For now white.
+                ctx.fillStyle = "#fff";
+                ctx.textAlign = "left";
+                ctx.textBaseline = "middle";
+                ctx.fillText(labelText, labelPoint.x + 6, labelPoint.y - 14);
             }
         });
 
-        // Draw preview line following mouse for active zone
+        // --- GHOST LINE & MAGNETIC SNAP (Active Drawing State) ---
         const activeZone = zones.find((z) => z.id === activeZoneId);
         if (activeZone && activeZone.points.length > 0 && activeZone.points.length < maxPoints && mousePos && !draggedPoint && !draggedZone) {
             const color = getColorFromClassId(activeZone.classId);
-            const scaledPoints = activeZone.points.map((p) => ({
-                x: p.x * scale,
-                y: p.y * scale,
-            }));
+            const lastPoint = activeZone.points[activeZone.points.length - 1];
+            const startPoint = activeZone.points[0];
+
+            const scaledLast = { x: lastPoint.x * scale, y: lastPoint.y * scale };
+            const scaledMouse = { x: mousePos.x * scale, y: mousePos.y * scale };
+            let targetPoint = scaledMouse;
+
+            // MAGNETIC SNAP: Check if near start point to close
+            if (activeZone.points.length >= 3) {
+                const scaledStart = { x: startPoint.x * scale, y: startPoint.y * scale };
+                const distToStart = Math.sqrt((scaledMouse.x - scaledStart.x) ** 2 + (scaledMouse.y - scaledStart.y) ** 2);
+                if (distToStart < 20) { // 20px snap radius (visual)
+                    targetPoint = scaledStart;
+                    // Draw Snap Indicator (Target)
+                    ctx.beginPath();
+                    ctx.arc(scaledStart.x, scaledStart.y, 8, 0, Math.PI * 2);
+                    ctx.strokeStyle = "#fff";
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([2, 2]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            }
+
+            // Draw "Ghost Line" (Dashed)
+            ctx.beginPath();
+            ctx.moveTo(scaledLast.x, scaledLast.y);
+            ctx.lineTo(targetPoint.x, targetPoint.y);
 
             ctx.strokeStyle = color;
             ctx.lineWidth = 2;
-            ctx.setLineDash([5, 5]);
-
-            ctx.beginPath();
-            ctx.moveTo(scaledPoints[0].x, scaledPoints[0].y);
-            for (let i = 1; i < scaledPoints.length; i++) {
-                ctx.lineTo(scaledPoints[i].x, scaledPoints[i].y);
-            }
-            ctx.lineTo(mousePos.x * scale, mousePos.y * scale);
-            // Don't close for preview unless it's the last point
-            if (activeZone.points.length === maxPoints - 1) {
-                ctx.closePath();
-            }
+            ctx.setLineDash([5, 5]); // Dashed line
             ctx.stroke();
-            ctx.setLineDash([]);
+            ctx.setLineDash([]); // Reset
+
+            // Draw cursor follower vertex
+            drawVertex(targetPoint.x, targetPoint.y, color, true, true, false);
         }
     }, [zones, activeZoneId, scale, imageLoaded, mousePos, maxPoints, hoveredPoint, draggedPoint, hoveredZoneId, draggedZone]);
 
@@ -297,7 +338,21 @@ export function ZoneCanvas({
         const y = (e.clientY - rect.top) / scale;
 
         // 1. Check if clicking on a point (drag point)
-        const pointHit = getPointAt(x, y);
+        let pointHit = getPointAt(x, y);
+
+        // SPECIAL: Magnetic Snap for closing active polygon
+        // If we missed a precise point hit, but are within "Snap Radius" (20px) of start point -> Close it
+        if (!pointHit && activeZoneId) {
+            const activeZone = zones.find(z => z.id === activeZoneId);
+            if (activeZone && activeZone.points.length >= 3) {
+                const startPoint = activeZone.points[0];
+                const dist = Math.sqrt((startPoint.x - x) ** 2 + (startPoint.y - y) ** 2);
+                if (dist <= 20 / scale) {
+                    pointHit = { zoneId: activeZoneId, index: 0 };
+                }
+            }
+        }
+
         if (pointHit) {
             // Check if clicking on first point of active zone with 3+ points (close polygon)
             if (activeZoneId && pointHit.zoneId === activeZoneId && pointHit.index === 0) {
