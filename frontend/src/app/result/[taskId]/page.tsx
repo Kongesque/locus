@@ -467,13 +467,19 @@ export default function ResultPage() {
                                                     {zone.label}
                                                 </span>
                                             </div>
+                                            {/* Multi-class indicator */}
+                                            {zone.classIds && zone.classIds.length > 1 && (
+                                                <span className="text-[9px] px-1.5 py-0.5 rounded-sm bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                                    {zone.classIds.length} classes
+                                                </span>
+                                            )}
                                         </div>
 
                                         <div className="mb-2 h-10 opacity-60 group-hover:opacity-100 transition-opacity">
                                             <Sparkline
                                                 data={job.detectionData}
                                                 zoneId={zone.id}
-                                                classId={zone.classId}
+                                                classId={zone.classIds[0]}
                                                 duration={job.processTime || 10}
                                             />
                                         </div>

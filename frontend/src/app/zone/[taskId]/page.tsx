@@ -52,7 +52,8 @@ export default function ZonePage() {
     // State
     const [zones, setZones] = useState<Zone[]>([]);
     const [activeZoneId, setActiveZoneId] = useState<string | null>(null);
-    const [maxPoints] = useState(12); // High default for flexible polygon drawing
+    // Configuration
+    const maxPoints = 12; // High default for flexible polygon drawing
     const [confidence, setConfidence] = useState(35);
     const [model, setModel] = useState("yolo11n.pt");
     const [trackerConfig, setTrackerConfig] = useState<TrackerConfig>({
@@ -65,33 +66,30 @@ export default function ZonePage() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [progress, setProgress] = useState(0);
 
-    // Initialize zones from job if exists
+    // Initialize settings from job
     useEffect(() => {
-        if (job?.zones && job.zones.length > 0) {
-            setTimeout(() => {
-                setZones(job.zones);
-                setActiveZoneId(job.zones[0].id);
-            }, 0);
+        if (!job) return;
+
+        // Initialize zones
+        if (job.zones && job.zones.length > 0) {
+            setZones(job.zones);
+            setActiveZoneId(job.zones[0].id);
         } else {
-            // Create initial zone
             const initialZone: Zone = {
                 id: generateZoneId(),
                 points: [],
-                classId: 0, // person
+                classIds: [0], // Default: person
                 color: getColorFromClassId(0),
                 label: "Zone 1",
             };
-            setTimeout(() => {
-                setZones([initialZone]);
-                setActiveZoneId(initialZone.id);
-            }, 0);
+            setZones([initialZone]);
+            setActiveZoneId(initialZone.id);
         }
 
-        setTimeout(() => {
-            if (job?.confidence) setConfidence(job.confidence);
-            if (job?.model) setModel(job.model);
-            if (job?.trackerConfig) setTrackerConfig(job.trackerConfig);
-        }, 0);
+        // Initialize parameters
+        if (job.confidence) setConfidence(job.confidence);
+        if (job.model) setModel(job.model);
+        if (job.trackerConfig) setTrackerConfig(job.trackerConfig);
     }, [job]);
 
     const handleFrameLoaded = useCallback((width: number, height: number) => {
@@ -115,7 +113,7 @@ export default function ZonePage() {
         const newZone: Zone = {
             id: generateZoneId(),
             points: firstPoint.x >= 0 && firstPoint.y >= 0 ? [firstPoint] : [],
-            classId: 0,
+            classIds: [0], // Default: person
             color: getColorFromClassId(0),
             label: `Zone ${zones.length + 1}`,
         };
@@ -136,11 +134,11 @@ export default function ZonePage() {
         });
     }, [activeZoneId]);
 
-    const handleZoneClassChange = useCallback((zoneId: string, classId: number) => {
+    const handleZoneClassChange = useCallback((zoneId: string, classIds: number[]) => {
         setZones((prev) =>
             prev.map((zone) => {
                 if (zone.id === zoneId) {
-                    return { ...zone, classId, color: getColorFromClassId(classId) };
+                    return { ...zone, classIds, color: getColorFromClassId(classIds[0]) };
                 }
                 return zone;
             })

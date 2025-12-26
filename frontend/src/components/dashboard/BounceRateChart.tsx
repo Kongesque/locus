@@ -39,7 +39,8 @@ export default function BounceRateChart({ dwellData, zones, bounceThreshold = 5 
                 bounces: bounces,
                 engaged: totalVisits - bounces,
                 total: totalVisits,
-                color: zone.color
+                color: zone.color,
+                classCount: zone.classIds?.length || 1
             };
         }).filter(d => d.total > 0); // Only show zones with data
     }, [dwellData, zones, bounceThreshold]);
@@ -104,7 +105,12 @@ export default function BounceRateChart({ dwellData, zones, bounceThreshold = 5 
                             }
                             return [`${value}% (${p.engaged}/${p.total} visitors)`, 'Engaged Rate'];
                         }) as never}
-                        labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
+                        labelFormatter={(label, payload) => {
+                            const data = payload?.[0]?.payload;
+                            const fullName = data?.fullName || label;
+                            const classCount = data?.classCount || 1;
+                            return classCount > 1 ? `${fullName} (${classCount} classes)` : fullName;
+                        }}
                     />
                     <Bar dataKey="engagedRate" name="Engaged" stackId="a" fill="#22c55e" radius={[0, 0, 0, 0]} barSize={16} isAnimationActive={false} />
                     <Bar dataKey="bounceRate" name="Bounce" stackId="a" fill="#ef4444" radius={[0, 4, 4, 0]} barSize={16} isAnimationActive={false} />

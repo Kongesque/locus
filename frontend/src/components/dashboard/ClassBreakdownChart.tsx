@@ -20,15 +20,17 @@ export default function ClassBreakdownChart({ zones }: ClassBreakdownChartProps)
     const chartData = useMemo(() => {
         if (!zones || zones.length === 0) return [];
 
-        // Count zones by class ID
+        // Count zones by class ID (support multi-class per zone)
         const classCounts: Record<number, number> = {};
 
         zones.forEach(zone => {
-            const classId = zone.classId;
-            if (!classCounts[classId]) {
-                classCounts[classId] = 0;
-            }
-            classCounts[classId]++;
+            // Count each class in the zone's classIds array
+            zone.classIds.forEach(classId => {
+                if (!classCounts[classId]) {
+                    classCounts[classId] = 0;
+                }
+                classCounts[classId]++;
+            });
         });
 
         // Convert to chart data

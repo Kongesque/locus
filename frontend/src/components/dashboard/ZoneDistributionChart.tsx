@@ -40,7 +40,7 @@ export default function ZoneDistributionChart({ dwellData, zones }: ZoneDistribu
                 name: zone.label,
                 id: zone.id,
                 value: zoneCounts[zone.id] || 0,
-                color: CLASS_COLORS[zone.classId] || DEFAULT_COLOR
+                color: CLASS_COLORS[zone.classIds[0]] || DEFAULT_COLOR
             }))
             .filter(item => item.value > 0)
             .sort((a, b) => b.value - a.value);

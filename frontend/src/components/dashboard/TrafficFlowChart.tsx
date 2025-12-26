@@ -37,7 +37,8 @@ export default function TrafficFlowChart({ lineCrossingData, zones }: TrafficFlo
                     out: -lc.out, // Negative for visual effect
                     outAbs: lc.out,
                     net: netFlow,
-                    color: zone.color
+                    color: zone.color,
+                    classCount: zone.classIds?.length || 1
                 };
             });
     }, [lineCrossingData, zones]);
@@ -95,7 +96,12 @@ export default function TrafficFlowChart({ lineCrossingData, zones }: TrafficFlo
                             const absValue = Math.abs(value ?? 0);
                             return [absValue, name === 'in' ? '↓ Entries' : '↑ Exits'];
                         }) as never}
-                        labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
+                        labelFormatter={(label, payload) => {
+                            const data = payload?.[0]?.payload;
+                            const fullName = data?.fullName || label;
+                            const classCount = data?.classCount || 1;
+                            return classCount > 1 ? `${fullName} (${classCount} classes)` : fullName;
+                        }}
                     // allowEscapeViewBox={{ x: false, y: true }}
                     />
                     <Legend

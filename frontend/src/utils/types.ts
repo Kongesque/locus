@@ -32,7 +32,7 @@ export interface Point {
 export interface Zone {
   id: string;
   points: Point[];
-  classId: number;
+  classIds: number[]; // Array of COCO class IDs for multi-class detection
   color: [number, number, number]; // RGB
   label: string;
 }

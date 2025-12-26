@@ -217,8 +217,9 @@ def _run_live_detection(stream_url, zones, frame_size, task_id, conf,
         area = [(p['x'], p['y']) for p in points]
         area_np = np.array(area, np.int32)
         
-        class_id = zone.get('classId', 19)
-        all_class_ids.add(class_id)
+        class_ids = zone.get('classIds', [19])  # Array of class IDs
+        for class_id in class_ids:
+            all_class_ids.add(class_id)
         
         zone_color = zone.get('color', [255, 255, 0])
         bgr_color = (zone_color[2], zone_color[1], zone_color[0])
@@ -227,7 +228,7 @@ def _run_live_detection(stream_url, zones, frame_size, task_id, conf,
             'id': zone['id'],
             'area': area,
             'area_np': area_np,
-            'class_id': class_id,
+            'class_ids': class_ids,  # Store as array
             'color': bgr_color,
             'is_line': len(points) == 2,
             'label': zone.get('label', f'Zone {len(zone_data) + 1}')
@@ -288,7 +289,8 @@ def _run_live_detection(stream_url, zones, frame_size, task_id, conf,
                 track.pop(0)
             
             for zd in zone_data:
-                if detected_class != zd['class_id']:
+                # Only check if detection matches any of zone's target classes
+                if detected_class not in zd['class_ids']:
                     continue
                 
                 zone_id = zd['id']
@@ -331,7 +333,7 @@ def _run_live_detection(stream_url, zones, frame_size, task_id, conf,
             zone_id = zd['id']
             count = len(crossed_objects_per_zone.get(zone_id, {}))
             counts[zone_id] = count
-            text_color = get_color_from_class_id(zd['class_id'])
+            text_color = get_color_from_class_id(zd['class_ids'][0])  # Use first class for display color
             zone_label = zd.get('label', f'Zone {idx + 1}')
             count_text = f"{zone_label}: {count}"
             text_position = (int(width * 0.02), y_offset + int(idx * height * 0.05))

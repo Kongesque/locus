@@ -17,7 +17,7 @@ interface ZoneSidebarProps {
     };
     onZoneSelect: (zoneId: string) => void;
     onZoneDelete: (zoneId: string) => void;
-    onZoneClassChange: (zoneId: string, classId: number) => void;
+    onZoneClassChange: (zoneId: string, classIds: number[]) => void;
     onZoneLabelChange: (zoneId: string, label: string) => void;
     onConfidenceChange: (value: number) => void;
     onModelChange: (value: string) => void;
@@ -109,7 +109,7 @@ export function ZoneSidebar({
                                 <div className="flex items-center gap-2">
                                     <div
                                         className="w-3 h-3 rounded-full"
-                                        style={{ backgroundColor: getColorFromClassId(zone.classId) }}
+                                        style={{ backgroundColor: getColorFromClassId(zone.classIds[0]) }}
                                     />
                                     <input
                                         type="text"
@@ -131,18 +131,50 @@ export function ZoneSidebar({
                                 </button>
                             </div>
 
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs text-secondary-text">Target:</span>
+                            <div className="space-y-2">
+                                <span className="text-xs text-secondary-text">Target Classes:</span>
+
+                                {/* Selected Classes as Tags */}
+                                <div className="flex flex-wrap gap-1.5">
+                                    {zone.classIds.map((classId) => (
+                                        <div
+                                            key={classId}
+                                            className="group flex items-center gap-1 px-2 py-0.5 rounded bg-btn-bg border border-btn-border text-xs text-text-color"
+                                        >
+                                            <span>{COCO_CLASSES[classId]?.charAt(0).toUpperCase() + COCO_CLASSES[classId]?.slice(1)}</span>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const newClassIds = zone.classIds.filter(id => id !== classId);
+                                                    if (newClassIds.length > 0) {
+                                                        onZoneClassChange(zone.id, newClassIds);
+                                                    }
+                                                }}
+                                                className="opacity-50 hover:opacity-100 hover:text-delete-text transition-opacity"
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Add Class Dropdown */}
                                 <select
-                                    value={zone.classId}
-                                    onChange={(e) =>
-                                        onZoneClassChange(zone.id, Number(e.target.value))
-                                    }
+                                    value=""
+                                    onChange={(e) => {
+                                        const newClassId = Number(e.target.value);
+                                        if (!zone.classIds.includes(newClassId)) {
+                                            onZoneClassChange(zone.id, [...zone.classIds, newClassId]);
+                                        }
+                                        e.target.value = ""; // Reset
+                                    }}
                                     onClick={(e) => e.stopPropagation()}
-                                    className="flex-1 bg-btn-bg text-text-color text-xs border border-btn-border rounded px-2 py-1"
+                                    className="w-full bg-btn-bg text-text-color text-xs border border-dashed border-btn-border rounded px-2 py-1.5"
                                 >
+                                    <option value="" disabled>+ Add Class</option>
                                     {Object.entries(COCO_CLASSES)
                                         .sort((a, b) => a[1].localeCompare(b[1]))
+                                        .filter(([id]) => !zone.classIds.includes(Number(id)))
                                         .map(([id, name]) => (
                                             <option key={id} value={id}>
                                                 {name.charAt(0).toUpperCase() + name.slice(1)}

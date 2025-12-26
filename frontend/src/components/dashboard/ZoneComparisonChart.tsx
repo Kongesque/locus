@@ -50,7 +50,8 @@ export default function ZoneComparisonChart({ detectionData, dwellData, zones }:
                 visitors: totalVisitors,
                 peak: peak,
                 avgDwell: avgDwell,
-                color: zone.color
+                color: zone.color,
+                classCount: zone.classIds?.length || 1  // Multi-class indicator
             };
         });
     }, [detectionData, dwellData, zones]);
@@ -111,7 +112,12 @@ export default function ZoneComparisonChart({ detectionData, dwellData, zones }:
                             if (name === 'Peak') return [`${value ?? 0}`, 'Peak Count'];
                             return [value, name];
                         }) as never}
-                        labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
+                        labelFormatter={(label, payload) => {
+                            const data = payload?.[0]?.payload;
+                            const fullName = data?.fullName || label;
+                            const classCount = data?.classCount || 1;
+                            return classCount > 1 ? `${fullName} (${classCount} classes)` : fullName;
+                        }}
                         allowEscapeViewBox={{ x: false, y: true }}
                         wrapperStyle={{ zIndex: 100 }}
                     />

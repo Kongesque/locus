@@ -214,8 +214,9 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
         area = [(p['x'], p['y']) for p in points]
         area_np = np.array(area, np.int32)
         
-        class_id = zone.get('classId', 19)
-        all_class_ids.add(class_id)
+        class_ids = zone.get('classIds', [19])  # Array of class IDs
+        for class_id in class_ids:
+            all_class_ids.add(class_id)
         
         # Get color from zone (already in RGB from frontend)
         zone_color = zone.get('color', [255, 255, 0])
@@ -226,7 +227,7 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
             'id': zone['id'],
             'area': area,
             'area_np': area_np,
-            'class_id': class_id,
+            'class_ids': class_ids,  # Store as array
             'color': bgr_color,
             'is_line': len(points) == 2,
             'label': zone.get('label', f'Zone {len(zone_data) + 1}')
@@ -298,8 +299,8 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
 
             # Check each zone
             for zd in zone_data:
-                # Only check if detection matches zone's target class
-                if detected_class != zd['class_id']:
+                # Only check if detection matches any of zone's target classes
+                if detected_class not in zd['class_ids']:
                     continue
                 
                 matches_any_zone_class = True
@@ -345,7 +346,7 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
                                 detection_events.append({
                                     "time": timestamp,
                                     "zone_id": zone_id,
-                                    "class_id": zd['class_id'],
+                                    "class_id": zd['class_ids'][0],  # Use first class for event logging
                                     "count": lc['in'] + lc['out'],
                                     "in_count": lc['in'],
                                     "out_count": lc['out'],
@@ -378,7 +379,7 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
                         detection_events.append({
                             "time": timestamp,
                             "zone_id": zone_id,
-                            "class_id": zd['class_id'],
+                            "class_id": zd['class_ids'][0],  # Use first class for event logging
                             "count": len(crossed_objects_per_zone[zone_id])
                         })
                     elif not crossed_objects_per_zone[zone_id][track_id].get('in_zone', False):
@@ -430,7 +431,7 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
         y_offset = int(height * 0.05)
         for idx, zd in enumerate(zone_data):
             zone_id = zd['id']
-            text_color = get_color_from_class_id(zd['class_id'])
+            text_color = get_color_from_class_id(zd['class_ids'][0])  # Use first class for display color
             
             # Zone label with count
             zone_label = zd.get('label', f'Zone {idx + 1}')

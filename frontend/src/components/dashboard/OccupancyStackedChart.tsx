@@ -14,8 +14,8 @@ import {
 import { DetectionEvent, Zone } from "@/utils/types";
 import { CLASS_COLORS, DEFAULT_COLOR } from "@/utils/colors";
 
-// Helper to get zone color from classId
-const getZoneColor = (zone: Zone) => CLASS_COLORS[zone.classId] || DEFAULT_COLOR;
+// Helper to get zone color from classIds
+const getZoneColor = (zone: Zone) => CLASS_COLORS[zone.classIds[0]] || DEFAULT_COLOR;
 
 interface OccupancyStackedChartProps {
     data: DetectionEvent[];

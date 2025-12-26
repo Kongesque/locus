@@ -13,7 +13,7 @@ class ZonePoint(BaseModel):
 class Zone(BaseModel):
     id: str
     points: list[ZonePoint]
-    classId: int
+    classIds: list[int]  # Support multiple classes per zone
     color: list[int]
     label: str
 

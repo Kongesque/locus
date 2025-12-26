@@ -178,7 +178,7 @@ export function ZoneCanvas({
 
             const isActive = zone.id === activeZoneId;
             const isHovered = zone.id === hoveredZoneId;
-            const color = getColorFromClassId(zone.classId);
+            const color = getColorFromClassId(zone.classIds[0]);
 
             // Scale points
             const scaledPoints = zone.points.map((p) => ({
@@ -282,7 +282,7 @@ export function ZoneCanvas({
         // --- GHOST LINE & MAGNETIC SNAP (Active Drawing State) ---
         const activeZone = zones.find((z) => z.id === activeZoneId);
         if (activeZone && activeZone.points.length > 0 && activeZone.points.length < maxPoints && mousePos && !draggedPoint && !draggedZone) {
-            const color = getColorFromClassId(activeZone.classId);
+            const color = getColorFromClassId(activeZone.classIds[0]);
             const lastPoint = activeZone.points[activeZone.points.length - 1];
             const startPoint = activeZone.points[0];
 
