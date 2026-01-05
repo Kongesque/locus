@@ -12,7 +12,7 @@
 
 Unlike cloud-based solutions, ZoneNet is **self-hosted and privacy-first**, ensuring all video processing happens locally on your hardware. It offers a modern, responsive dashboard built with **Next.js 15** for real-time visualization of data, traffic trends, and occupancy insights.
 
-![ZoneNet AI Object Counting Demo with Custom Polygon Zones](demo/demo.gif)
+https://github.com/user-attachments/assets/647da3b4-74e2-4da8-872c-6d9200b7c0af
 
 ## 📋 Table of Contents
 - [Real-World Applications](#-real-world-applications)
