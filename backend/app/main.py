@@ -1,5 +1,5 @@
 """
-ZoneNet FastAPI Backend - Main Application Entry Point
+Locus FastAPI Backend - Main Application Entry Point
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,7 +14,7 @@ init_db()
 
 # Create FastAPI app
 app = FastAPI(
-    title="ZoneNet API",
+    title="Locus API",
     description="AI Object Counter & Analytics API",
     version="0.2.0"
 )

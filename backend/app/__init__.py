@@ -1,3 +1,3 @@
 """
-ZoneNet Backend - FastAPI Application
+Locus Backend - FastAPI Application
 """

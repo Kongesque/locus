@@ -1,5 +1,6 @@
-# ZoneNet: Open Source AI Object Counter & Analytics Dashboard
-## Real-time Computer Vision with YOLO11 | Custom Region Tracking | Next.js & FastAPI
+# Locus
+## The Open Source Vision Analytics Engine.
+### Turn RTSP streams into queryable data. Dockerized, API-First, and 100% Offline.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)
@@ -8,9 +9,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED.svg)
 
-**ZoneNet** is a professional-grade, **open-source computer vision application** designed for **high-accuracy object counting** and **video analytics**. Leveraging the power of state-of-the-art **YOLO11** models and **ByteTrack** multi-object tracking, it allows users to define **custom polygon zones (ROI)** for precise monitoring in diverse environments.
-
-Unlike cloud-based solutions, ZoneNet is **self-hosted and privacy-first**, ensuring all video processing happens locally on your hardware. It offers a modern, responsive dashboard built with **Next.js 15** for real-time visualization of data, traffic trends, and occupancy insights.
+**Locus** is a self-hosted computer vision platform that sits on top of your existing NVR. It uses **YOLO11** to transform video pixels into JSON events, allowing you to query your physical world like a database. Built for the **Private Cloud**.
 
 https://github.com/user-attachments/assets/647da3b4-74e2-4da8-872c-6d9200b7c0af
 
@@ -25,7 +24,7 @@ https://github.com/user-attachments/assets/647da3b4-74e2-4da8-872c-6d9200b7c0af
 
 ## 🌍 Real-World Applications
 
-ZoneNet is versatile and can be deployed for various **AI analytics** scenarios:
+**Locus** is versatile and can be deployed for various **AI analytics** scenarios:
 
 - **Retail Intelligence**: Monitor store footfall, analyze customer dwell times in specific aisles, and optimize store layout.
 - **Smart Traffic Management**: Count vehicles crossing intersections, classify vehicle types (cars, trucks, buses), and detect traffic flow direction.
@@ -35,6 +34,9 @@ ZoneNet is versatile and can be deployed for various **AI analytics** scenarios:
 
 ## 🚀 Key Features
 
+- **Running on Your Metal**: M1/M2/M3, CUDA, Coral.
+- **Private by Design**: No cloud, no telemetry.
+- **Geometry-based Logic**: Draw polygons, not just grids.
 - **Advanced Geofencing & ROI**: Draw precise, multi-point polygon zones to count objects only where it matters.
 - **Directional Line Crossing**: Set up virtual tripwires to count objects entering (IN) or exiting (OUT) a specific area.
 - **Comprehensive Object Recognition**: Detect and track over **80 COCO classes** (People, Vehicles, Animals, etc.) out of the box.
@@ -43,7 +45,6 @@ ZoneNet is versatile and can be deployed for various **AI analytics** scenarios:
 - **Insightful Analytics**:
     - **Dwell Time Analysis**: Measure how long objects stay within a defined zone.
     - **Data Export**: Download your tracking data in **CSV and JSON** formats.
-- **100% Private**: Complete local execution. No video data is sent to the cloud.
 
 ## 🛠️ Tech Stack
 
@@ -59,8 +60,8 @@ ZoneNet is versatile and can be deployed for various **AI analytics** scenarios:
 ### Installation
 
 ```bash
-git clone https://github.com/Kongesque/zonenet.git
-cd zonenet
+git clone https://github.com/kongesque/locus.git
+cd locus
 
 # Backend
 cd backend && uv sync && cd ..

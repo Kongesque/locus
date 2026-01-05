@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ZoneNet - AI Object Counter & Analytics",
+  title: "Locus | Vision Analytics Engine",
   description:
-    "Real-time object counting and video analytics with custom region tracking using YOLO11",
+    "Turn RTSP streams into queryable data. Dockerized, API-First, and 100% Offline.",
   icons: {
     icon: "/favicon.png",
   },

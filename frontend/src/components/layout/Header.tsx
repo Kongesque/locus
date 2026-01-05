@@ -106,7 +106,7 @@ export function Header({ children }: HeaderProps) {
 
             <Link href="/" className="no-underline">
                 <div className="text-lg font-semibold text-text-color tracking-tight font-mono">
-                    ZoneNet
+                    Locus
                 </div>
             </Link>
             <div className="flex items-center gap-2">

@@ -1,5 +1,5 @@
 """
-Jobs API Routes - CRUD operations for video processing jobs
+Locus Jobs API Routes - CRUD operations for video processing jobs
 """
 from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks
 from fastapi.responses import StreamingResponse
@@ -256,7 +256,7 @@ async def export_data(task_id: str, format: str = "json"):
         return StreamingResponse(
             iter([output.getvalue()]),
             media_type="text/csv",
-            headers={"Content-Disposition": f"attachment; filename=zonenet_data_{task_id}.csv"}
+            headers={"Content-Disposition": f"attachment; filename=locus_data_{task_id}.csv"}
         )
     
     # JSON export with statistics
