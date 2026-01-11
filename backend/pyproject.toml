@@ -1,7 +1,7 @@
 [project]
 name = "locus-backend"
 version = "0.1.0"
-description = "Locus - Self-hosted computer vision platform backend"
+description = "Locus - Self-hosted spatial analytics platform backend"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115.0",

@@ -28,8 +28,8 @@ locus/
 
 ```bash
 # Clone the repository
-git clone https://github.com/Kongesque/zonenet-ui.git
-cd zonenet-ui
+git clone https://github.com/Kongesque/locus.git
+cd locus
 
 # Start all services
 docker-compose up --build
@@ -43,9 +43,15 @@ docker-compose up --build
 ### Local Development
 
 **Backend:**
+The backend uses **uv** for dependency management. It will automatically create and manage a virtual environment for you.
+
 ```bash
 cd backend
+
+# Install dependencies (creates .venv automatically)
 uv sync
+
+# Run the development server with hot-reload
 uv run uvicorn app.main:app --reload --port 8000
 ```
 
@@ -58,25 +64,37 @@ npm run dev
 
 ## API Endpoints
 
+Full interactive API documentation is available at:
+- Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
+- ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+
+### Core Endpoints
+
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
-| GET | `/api/health` | Health check | No |
-| POST | `/api/auth/login` | Login with password | No |
-| POST | `/api/auth/logout` | Logout (clear cookie) | Yes |
-| GET | `/api/auth/me` | Check auth status | Yes |
+| GET | `/api/health` | System health check | No |
+| POST | `/api/auth/setup` | Initial password setup (first run only) | No |
+| GET | `/api/auth/status` | Check if setup is complete | No |
+| POST | `/api/auth/login` | Login with password (sets HTTP-only cookie) | No |
+| POST | `/api/auth/logout` | Logout (clears cookie) | Yes |
+| GET | `/api/auth/me` | Check current session status | Yes |
 
 ## Environment Variables
 
-Create a `.env` file in the root directory:
+Create a `.env` file in the root directory (or `backend/.env` for backend-only dev).
 
 ```env
-# Auth
+# Auth (REQUIRED)
 LOCUS_PASSWORD=your-secure-password
-SECRET_KEY=your-secret-key
+SECRET_KEY=your-secret-key-change-this-in-prod
 
 # URLs
 FRONTEND_URL=http://localhost:3000
 NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# Backend Options
+DEBUG=True
+RESET_PASSWORD=False  # Set to True and restart to reset admin password
 ```
 
 ## Features
@@ -91,10 +109,10 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 | Component | Technology |
 |-----------|------------|
-| Frontend  | Next.js 15, React, Tailwind CSS, shadcn/ui |
-| Backend   | FastAPI, Python 3.12, Pydantic |
-| Database  | SQLite (events), DuckDB (analytics) |
-| Auth      | JWT cookies, single password |
+| Frontend  | Next.js 16, React 19, Tailwind CSS 4, shadcn/ui |
+| Backend   | FastAPI, Python 3.12, Pydantic, uv, SlowAPI |
+| Database  | SQLite (auth, events), DuckDB (analytics) |
+| Auth      | Single Password, Argon2id, JWT (HttpOnly Cookies) |
 
 ## License
 
