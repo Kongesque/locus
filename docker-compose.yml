@@ -1,24 +1,38 @@
+# Locus - Self-hosted Computer Vision Platform
+# Docker Compose for development
+
 services:
-  # FastAPI Backend
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    volumes:
-      - ./backend/uploads:/app/uploads
-      - ./backend/weights:/app/weights
-      - ./backend/instance:/app/instance
     environment:
-      - PYTHONUNBUFFERED=1
-    restart: unless-stopped
+      - LOCUS_PASSWORD=${LOCUS_PASSWORD:-changeme}
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key}
+      - FRONTEND_URL=http://localhost:3000
+      - DEBUG=true
+      - DATABASE_PATH=/app/data/locus.db
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/api/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # Next.js Frontend
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8000
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
     depends_on:
-      - backend
-    restart: unless-stopped
+      backend:
+        condition: service_healthy
+
+volumes:
+  data:

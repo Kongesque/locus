@@ -1,3 +1,1 @@
-"""
-Locus Backend - FastAPI Application
-"""
+# Locus Backend

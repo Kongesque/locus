@@ -1,40 +1,25 @@
-# Stage 1: Python Backend
-FROM python:3.10-slim
+FROM python:3.12-slim
 
-# Install system dependencies for OpenCV
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1-mesa-glx \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    libgomp1 \
-    ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install uv for fast Python package management
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
 WORKDIR /app
 
-# Copy Python dependency files
-COPY pyproject.toml uv.lock ./
+# Copy dependency files first for better caching
+COPY pyproject.toml ./
+COPY uv.lock* ./
 
-# Install Python dependencies
-RUN uv sync --frozen --no-dev
+# Install dependencies
+RUN uv sync --frozen --no-dev 2>/dev/null || uv sync --no-dev
 
 # Copy application code
-COPY app/ ./app/
-COPY download_models.py ./
+COPY app ./app
 
-# Create necessary directories
-RUN mkdir -p uploads/videos uploads/frames uploads/outputs weights instance
+# Create data directory
+RUN mkdir -p /app/data
 
-# Expose FastAPI port
+# Expose port
 EXPOSE 8000
 
-# Environment variables
-ENV PYTHONUNBUFFERED=1
-
-# Run FastAPI with uvicorn
+# Run the application
 CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

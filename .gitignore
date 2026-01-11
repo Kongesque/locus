@@ -1,29 +1,71 @@
-# Node
-node_modules/
-.next/
-out/
-
-# Python
-__pycache__/
-*.py[cod]
-*.so
-.venv/
-venv/
-*.egg-info/
-
-# Backend specific
-backend/.venv/
-backend/uploads/
-backend/instance/
-backend/weights/*.pt
-!backend/weights/.gitkeep
-
-# Project
-*.mp4
-!demo/*.gif
-
-# System
+# ======================
+# Global
+# ======================
 .DS_Store
+*.pem
+
+# Environment files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# ======================
+# Frontend (Next.js)
+# ======================
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.pnp
+frontend/.pnp.*
+frontend/.yarn/*
+!frontend/.yarn/patches
+!frontend/.yarn/plugins
+!frontend/.yarn/releases
+!frontend/.yarn/versions
+frontend/coverage/
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.pnpm-debug.log*
+frontend/public/preview.mp4
+
+# ======================
+# Backend (Python/FastAPI)
+# ======================
+__pycache__/
+backend/*.py[cod]
+backend/*$py.class
+backend/*.so
+backend/.Python
+backend/venv/
+backend/.venv/
+backend/*.egg-info/
+backend/dist/
+backend/build/
+backend/.ruff_cache/
+backend/.pytest_cache/
+backend/uv.lock
+
+# ======================
+# Data & Database
+# ======================
+data/
+
+# ======================
+# IDE & Editors
+# ======================
+.agent/
 .vscode/
 .idea/
-frontend/public/media/outputs
+*.swp
+*.swo
+
+# ======================
+# Vercel
+# ======================
+.vercel
+
