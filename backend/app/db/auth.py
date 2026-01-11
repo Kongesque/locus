@@ -2,13 +2,14 @@
 Auth database module for password storage.
 Uses separate auth.db to keep auth data isolated.
 """
-import aiosqlite
 from pathlib import Path
+
+import aiosqlite
 
 from app.core.config import settings
 
 # Auth database path (in db folder with other databases)
-AUTH_DB_PATH = Path(settings.DATABASE_PATH).parent / "db" / "auth.db"
+AUTH_DB_PATH = Path(settings.DATA_DIR) / "db" / "auth.db"
 
 
 async def init_auth_db():

@@ -12,13 +12,11 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
     )
 
-    # Auth - Argon2id hashed password
-    # Generate with: python -c "from argon2 import PasswordHasher; print(PasswordHasher().hash('yourpassword'))"
-    LOCUS_PASSWORD_HASH: str = "$argon2id$v=19$m=65536,t=3,p=4$changeme"
+    # JWT secret key for token signing
     SECRET_KEY: str = "super-secret-key-change-in-production"
 
-    # Database
-    DATABASE_PATH: str = "./data/locus.db"
+    # Data directory for databases, media, and config
+    DATA_DIR: str = "./data"
 
     # CORS - Frontend URL for cookie sharing
     FRONTEND_URL: str = "http://localhost:3000"

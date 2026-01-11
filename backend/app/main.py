@@ -5,16 +5,21 @@ import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
-from app.core.config import settings
 from app.core.auth import hash_password
+from app.core.config import settings
+from app.db.auth import (
+    clear_password_hash,
+    init_auth_db,
+    is_setup_complete,
+    set_password_hash,
+)
 from app.db.database import init_db
-from app.db.auth import init_auth_db, is_setup_complete, set_password_hash, clear_password_hash
 from app.routers import auth, health
 
 # Rate limiter instance
@@ -28,7 +33,7 @@ async def lifespan(app: FastAPI):
     Runs on startup and shutdown.
     """
     # Startup: Ensure data directory exists
-    data_dir = Path(settings.DATABASE_PATH).parent
+    data_dir = Path(settings.DATA_DIR)
     data_dir.mkdir(parents=True, exist_ok=True)
 
     # Initialize databases

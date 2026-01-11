@@ -1,6 +1,4 @@
-# ======================
 # Global
-# ======================
 .DS_Store
 *.pem
 
@@ -10,9 +8,7 @@
 .env.*.local
 !.env.example
 
-# ======================
 # Frontend (Next.js)
-# ======================
 frontend/node_modules/
 frontend/.next/
 frontend/out/
@@ -33,9 +29,7 @@ frontend/yarn-error.log*
 frontend/.pnpm-debug.log*
 frontend/public/preview.mp4
 
-# ======================
 # Backend (Python/FastAPI)
-# ======================
 __pycache__/
 backend/*.py[cod]
 backend/*$py.class
@@ -50,22 +44,19 @@ backend/.ruff_cache/
 backend/.pytest_cache/
 backend/uv.lock
 
-# ======================
-# Data & Database
-# ======================
+# Data 
 data/
 
-# ======================
+# Documentation
+docs/
+
 # IDE & Editors
-# ======================
 .agent/
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# ======================
 # Vercel
-# ======================
 .vercel
 

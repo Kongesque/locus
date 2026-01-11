@@ -1,29 +1,15 @@
 """
-SQLite database connection manager.
-Placeholder for future database operations.
+Database initialization module.
 """
-import aiosqlite
+from pathlib import Path
 
 from app.core.config import settings
 
 
-async def get_db_connection():
-    """
-    Get an async SQLite database connection.
-    Use as async context manager.
-    """
-    async with aiosqlite.connect(settings.DATABASE_PATH) as db:
-        db.row_factory = aiosqlite.Row
-        yield db
-
-
 async def init_db():
     """
-    Initialize the database with required tables.
+    Initialize the data directory structure.
     Called on application startup.
     """
-    async with aiosqlite.connect(settings.DATABASE_PATH) as db:
-        # Create tables here when needed
-        # For now, just ensure the database file exists
-        await db.execute("SELECT 1")
-        await db.commit()
+    db_dir = Path(settings.DATA_DIR) / "db"
+    db_dir.mkdir(parents=True, exist_ok=True)

@@ -1,7 +1,7 @@
 """
 Simple single-password authentication with JWT cookies and Argon2id hashing.
 """
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import jwt
 from argon2 import PasswordHasher
@@ -45,7 +45,7 @@ def hash_password(password: str) -> str:
 
 def create_access_token() -> str:
     """Create a JWT access token with expiration."""
-    expire = datetime.now(timezone.utc) + timedelta(
+    expire = datetime.now(UTC) + timedelta(
         hours=settings.ACCESS_TOKEN_EXPIRE_HOURS
     )
     payload = {"exp": expire, "type": "access"}
