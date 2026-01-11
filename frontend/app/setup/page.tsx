@@ -58,7 +58,7 @@ export default function SetupPage() {
                         <Shield className="h-6 w-6 text-primary" />
                     </div>
                 </div>
-                <CardTitle className="text-2xl font-bold">Welcome to ZoneNet</CardTitle>
+                <CardTitle className="text-2xl font-bold">Welcome to Locus</CardTitle>
                 <CardDescription>Set up your password to get started</CardDescription>
             </CardHeader>
             <CardContent>

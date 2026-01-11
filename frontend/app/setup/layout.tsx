@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Setup - ZoneNet",
-    description: "Initial setup for ZoneNet",
+    title: "Setup - Locus",
+    description: "Initial setup for Locus",
 };
 
 export default function SetupLayout({

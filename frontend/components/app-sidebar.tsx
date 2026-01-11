@@ -35,7 +35,7 @@ export function AppSidebar() {
                             className="data-[slot=sidebar-menu-button]:!p-1 pointer-events-none"
                         >
                             <Echo className="!size-6" />
-                            <span className="text-base font-semibold">ZoneNet</span>
+                            <span className="text-base font-semibold">Locus</span>
                             <Badge variant="secondary">Beta</Badge>
                         </SidebarMenuButton>
                     </SidebarMenuItem>

@@ -36,7 +36,7 @@ export default function Page() {
                     <div className="flex flex-col gap-0.5">
                         <span className="text-sm font-medium">Theme</span>
                         <span className="text-muted-foreground text-xs">
-                            How ZoneNet looks on your device
+                            How Locus looks on your device
                         </span>
                     </div>
                     <Select value={theme} onValueChange={setTheme} defaultValue="dark">

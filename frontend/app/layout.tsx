@@ -23,7 +23,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ZoneNet",
+  title: "Locus",
   description: "Professional-grade object tracking and video analytics for everyone.",
 };
 

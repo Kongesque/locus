@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Login - ZoneNet",
-    description: "Login to ZoneNet",
+    title: "Login - Locus",
+    description: "Login to Locus",
 };
 
 export default function LoginLayout({
