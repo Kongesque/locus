@@ -6,8 +6,10 @@ import { useRouter } from "next/navigation";
 interface AuthContextType {
     isAuthenticated: boolean;
     isLoading: boolean;
+    setupComplete: boolean | null;
     login: (password: string) => Promise<{ success: boolean; error?: string }>;
     logout: () => Promise<void>;
+    setup: (password: string, confirmPassword: string) => Promise<{ success: boolean; error?: string }>;
     checkAuth: () => Promise<void>;
 }
 
@@ -18,10 +20,37 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [setupComplete, setSetupComplete] = useState<boolean | null>(null);
     const router = useRouter();
+
+    const checkSetupStatus = async () => {
+        try {
+            const response = await fetch(`${API_URL}/api/auth/status`, {
+                credentials: "include",
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setSetupComplete(data.setup_complete);
+                return data.setup_complete;
+            }
+        } catch {
+            console.error("Failed to check setup status");
+        }
+        return null;
+    };
 
     const checkAuth = async () => {
         try {
+            // First check setup status
+            const isSetupComplete = await checkSetupStatus();
+
+            if (!isSetupComplete) {
+                setIsAuthenticated(false);
+                setIsLoading(false);
+                return;
+            }
+
+            // Then check auth
             const response = await fetch(`${API_URL}/api/auth/me`, {
                 credentials: "include",
             });
@@ -54,6 +83,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const setup = async (password: string, confirmPassword: string) => {
+        try {
+            const response = await fetch(`${API_URL}/api/auth/setup`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ password, confirm_password: confirmPassword }),
+            });
+
+            if (response.ok) {
+                setIsAuthenticated(true);
+                setSetupComplete(true);
+                return { success: true };
+            }
+
+            const data = await response.json();
+            return { success: false, error: data.detail || "Setup failed" };
+        } catch {
+            return { success: false, error: "Connection error" };
+        }
+    };
+
     const logout = async () => {
         try {
             await fetch(`${API_URL}/api/auth/logout`, {
@@ -71,7 +122,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, isLoading, login, logout, checkAuth }}>
+        <AuthContext.Provider value={{
+            isAuthenticated,
+            isLoading,
+            setupComplete,
+            login,
+            logout,
+            setup,
+            checkAuth
+        }}>
             {children}
         </AuthContext.Provider>
     );

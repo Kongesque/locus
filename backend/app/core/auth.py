@@ -9,6 +9,7 @@ from argon2.exceptions import VerifyMismatchError
 from fastapi import HTTPException, Request, status
 
 from app.core.config import settings
+from app.db.auth import get_password_hash
 
 # Initialize Argon2id hasher with OWASP 2025 parameters
 _hasher = PasswordHasher(
@@ -18,13 +19,17 @@ _hasher = PasswordHasher(
 )
 
 
-def verify_password(input_password: str) -> bool:
+async def verify_password(input_password: str) -> bool:
     """
     Check if the provided password matches the stored hash.
     Uses Argon2id for secure password verification.
     """
+    stored_hash = await get_password_hash()
+    if not stored_hash:
+        return False
+    
     try:
-        _hasher.verify(settings.LOCUS_PASSWORD_HASH, input_password)
+        _hasher.verify(stored_hash, input_password)
         return True
     except VerifyMismatchError:
         return False

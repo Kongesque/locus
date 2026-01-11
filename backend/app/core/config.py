@@ -37,5 +37,8 @@ class Settings(BaseSettings):
     # Rate limiting
     RATE_LIMIT_LOGIN: str = "5/minute"
 
+    # Password reset flag (set to True to reset password on restart)
+    RESET_PASSWORD: bool = False
+
 
 settings = Settings()

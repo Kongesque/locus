@@ -1,6 +1,7 @@
 """
 Locus Backend - FastAPI Application Entry Point
 """
+import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -11,7 +12,9 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from app.core.config import settings
+from app.core.auth import hash_password
 from app.db.database import init_db
+from app.db.auth import init_auth_db, is_setup_complete, set_password_hash, clear_password_hash
 from app.routers import auth, health
 
 # Rate limiter instance
@@ -28,8 +31,28 @@ async def lifespan(app: FastAPI):
     data_dir = Path(settings.DATABASE_PATH).parent
     data_dir.mkdir(parents=True, exist_ok=True)
 
-    # Initialize database
+    # Initialize databases
     await init_db()
+    await init_auth_db()
+
+    # Handle password reset flag
+    if settings.RESET_PASSWORD:
+        await clear_password_hash()
+        # Generate a random password and print to logs
+        new_password = secrets.token_urlsafe(16)
+        new_hash = hash_password(new_password)
+        await set_password_hash(new_hash)
+        print("=" * 60)
+        print("PASSWORD RESET")
+        print(f"New password: {new_password}")
+        print("Please change RESET_PASSWORD back to False in your .env")
+        print("=" * 60)
+
+    # Log setup status
+    if await is_setup_complete():
+        print("Auth: Setup complete, login required")
+    else:
+        print("Auth: Setup required, visit /setup to create password")
 
     yield
 

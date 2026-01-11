@@ -9,15 +9,30 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
-    const { isAuthenticated, isLoading } = useAuth();
+    const { isAuthenticated, isLoading, setupComplete } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
 
     useEffect(() => {
-        if (!isLoading && !isAuthenticated && pathname !== "/login") {
-            router.push("/login");
+        if (isLoading) return;
+
+        // If on setup or login page, let them through
+        if (pathname === "/setup" || pathname === "/login") {
+            return;
         }
-    }, [isAuthenticated, isLoading, pathname, router]);
+
+        // If setup not complete, redirect to setup
+        if (setupComplete === false) {
+            router.push("/setup");
+            return;
+        }
+
+        // If setup complete but not authenticated, redirect to login
+        if (setupComplete === true && !isAuthenticated) {
+            router.push("/login");
+            return;
+        }
+    }, [isAuthenticated, isLoading, setupComplete, pathname, router]);
 
     // Show loading state while checking auth
     if (isLoading) {
@@ -28,8 +43,13 @@ export function AuthGuard({ children }: AuthGuardProps) {
         );
     }
 
-    // If on login page, always render
-    if (pathname === "/login") {
+    // If on setup page and setup not complete, render
+    if (pathname === "/setup" && setupComplete === false) {
+        return <>{children}</>;
+    }
+
+    // If on login page and setup complete, render
+    if (pathname === "/login" && setupComplete === true) {
         return <>{children}</>;
     }
 
