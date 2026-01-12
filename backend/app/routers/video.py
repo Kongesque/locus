@@ -3,6 +3,7 @@ import uuid
 import os
 import json
 import cv2  # Added for thumbnail generation
+from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
@@ -53,22 +54,40 @@ def load_tasks() -> dict:
 tasks = load_tasks()
 print(f"Loaded {len(tasks)} tasks from disk.")
 
-def generate_thumbnail(video_path: str, thumbnail_path: str):
-    """Extract first frame as thumbnail."""
+def get_video_metadata(video_path: str, thumbnail_path: str) -> dict:
+    """Extract first frame as thumbnail and get video duration."""
+    result = {"has_thumbnail": False, "duration": "00:00"}
+    
     try:
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
-             return False
+            return result
+        
+        # Get duration
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        if fps > 0:
+            duration_sec = frame_count / fps
+            hours = int(duration_sec // 3600)
+            minutes = int((duration_sec % 3600) // 60)
+            seconds = int(duration_sec % 60)
+            if hours > 0:
+                result["duration"] = f"{hours}:{minutes:02d}:{seconds:02d}"
+            else:
+                result["duration"] = f"{minutes:02d}:{seconds:02d}"
+        
+        # Get thumbnail (first frame)
         ret, frame = cap.read()
         cap.release()
         
         if ret:
             cv2.imwrite(thumbnail_path, frame)
-            return True
-        return False
+            result["has_thumbnail"] = True
+            
+        return result
     except Exception as e:
-        print(f"Thumbnail generation failed: {e}")
-        return False
+        print(f"Video metadata extraction failed: {e}")
+        return result
 
 @router.post("/upload")
 async def upload_video(file: UploadFile = File(...)):
@@ -80,22 +99,23 @@ async def upload_video(file: UploadFile = File(...)):
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     
-    # Generate Thumbnail
+    # Generate Thumbnail and get duration
     thumb_filename = f"{task_id}.jpg"
     thumb_path = THUMBNAILS_DIR / thumb_filename
-    has_thumbnail = generate_thumbnail(str(file_path), str(thumb_path))
+    metadata = get_video_metadata(str(file_path), str(thumb_path))
     
     task_data = {
         "id": task_id,
         "status": "pending",
         "filename": filename,
         "input_path": str(file_path),
-        "created_at": str(uuid.uuid1().time), # timestamp placehoder
+        "created_at": datetime.now().isoformat(),
         "name": file.filename,
-        "format": "mp4" # Assumption
+        "format": "mp4",
+        "duration": metadata["duration"]
     }
     
-    if has_thumbnail:
+    if metadata["has_thumbnail"]:
         task_data["thumbnail_url"] = f"/api/video/{task_id}/thumbnail"
     
     tasks[task_id] = task_data

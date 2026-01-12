@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { PageTitle2 } from "@/components/page-title";
 import { UploadArea, SearchInput, VideoCard } from "@/components/video-analytics";
+import { formatRelativeTime, formatDuration } from "@/lib/format-time";
 
 interface VideoTask {
     id: string;
@@ -30,8 +31,8 @@ export default function Page() {
             const mappedTasks = data.map((t: any) => ({
                 id: t.id,
                 name: t.name,
-                duration: t.duration || "00:00",
-                createdAt: new Date(t.created_at || Date.now()).toLocaleDateString(),
+                duration: formatDuration(t.duration || "00:00"),
+                createdAt: formatRelativeTime(t.created_at),
                 format: t.format || "MP4",
                 status: t.status,
                 thumbnail: t.thumbnail_url ? `http://localhost:8000${t.thumbnail_url}` : undefined,
