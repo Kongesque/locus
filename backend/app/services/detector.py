@@ -143,9 +143,22 @@ def process_video_task(
                 if len(track) > 30:
                     track.pop(0)
                 
-                # Check Zones
+                # First check if this class is relevant to ANY zone
+                is_relevant_class = False
+                for i, _ in enumerate(zone_polygons):
+                    if zone_filters[i] is None:  # Zone allows all
+                        is_relevant_class = True
+                        break
+                    elif cls_id in zone_filters[i]:  # Zone allows this class
+                        is_relevant_class = True
+                        break
+                
+                # Skip visualization for irrelevant classes (UX best practice)
+                if not is_relevant_class:
+                    continue
+                
+                # Check Zones for counting
                 is_counted = False
-                in_wrong_zone = False # If object is in a zone but filtered out
                 
                 for i, polygon in enumerate(zone_polygons):
                     # Check class filter
@@ -170,7 +183,7 @@ def process_video_task(
                         is_counted = True
                         break # Counted in at least one valid zone
                 
-                # Visualize
+                # Visualize (only relevant classes)
                 color = (0, 255, 0) if is_counted else (0, 0, 255) # Green vs Red
                 cv2.circle(frame, (center_x, center_y), 5, color, -1)
                 

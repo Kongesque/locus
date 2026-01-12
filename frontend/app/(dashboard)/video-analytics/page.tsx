@@ -83,7 +83,7 @@ export default function Page() {
                 </div>
             ) : (
                 <div className="flex h-24 items-center justify-center">
-                    <span className="text-muted-foreground">No results found.</span>
+                    <span className="text-muted-foreground text-sm">No results found.</span>
                 </div>
             )}
         </div>
