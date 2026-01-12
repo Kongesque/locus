@@ -42,16 +42,21 @@ docker-compose up --build
 
 ### Local Development
 
+**Prerequisite:** Ensure you have Node.js and Python/uv installed.
+
+```bash
+# Install dependencies for both services
+make install
+
+# Start backend and frontend in parallel with hot-reload
+make dev
+```
+
 **Backend:**
-The backend uses **uv** for dependency management. It will automatically create and manage a virtual environment for you.
 
 ```bash
 cd backend
-
-# Install dependencies (creates .venv automatically)
 uv sync
-
-# Run the development server with hot-reload
 uv run uvicorn app.main:app --reload --port 8000
 ```
 
