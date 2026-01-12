@@ -21,6 +21,7 @@ import {
     DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu"
 import { useState, useEffect } from "react"
+import { useAuth } from "@/components/auth-context"
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -33,6 +34,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 export function Header() {
     const { setTheme } = useTheme()
     const { state } = useSidebar()
+    const { logout } = useAuth()
     const pathname = usePathname()
     const [pageLabel, setPageLabel] = useState<string | null>(null)
 
@@ -175,7 +177,7 @@ export function Header() {
                             </DropdownMenuPortal>
                         </DropdownMenuSub>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={logout}>
                             <LogOut className="mr-2 h-4 w-4" />
                             <span>Sign Out</span>
                         </DropdownMenuItem>
