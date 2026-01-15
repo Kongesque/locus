@@ -61,13 +61,17 @@ export function Header() {
         if (videoMatch) {
             setPageLabel("Loading...")
             const taskId = videoMatch[1]
-            fetch('/data/video_tasks.json')
-                .then(res => res.json())
-                .then(data => {
-                    const task = data.tasks?.find((t: any) => t.id === taskId)
-                    setPageLabel(task ? task.name : taskId)
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+            fetch(`${API_URL}/api/video/${taskId}`)
+                .then(res => {
+                    if (!res.ok) throw new Error("Task not found");
+                    return res.json();
                 })
-                .catch(() => setPageLabel("Video Task"))
+                .then(task => {
+                    setPageLabel(task.name || taskId)
+                })
+                .catch(() => setPageLabel(taskId)) // Fallback to ID if fetch fails 
             return
         }
 
