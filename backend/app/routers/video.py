@@ -1,17 +1,21 @@
 import shutil
 import uuid
 import os
-import json
-import cv2  # Added for thumbnail generation
+import cv2
 from datetime import datetime
 from pathlib import Path
-from typing import Literal
+from typing import List
 
-from fastapi import APIRouter, UploadFile, File, BackgroundTasks, HTTPException
-from fastapi.responses import FileResponse, JSONResponse
-from app.schemas.video import ProcessRequest, TaskResponse
-from app.services.detector import process_video_task
+from fastapi import APIRouter, UploadFile, File, BackgroundTasks, HTTPException, Depends
+from fastapi.responses import FileResponse
+from sqlmodel import Session, select
+
+from app.schemas.video import ProcessRequest
 from app.core.config import settings
+from app.models.sql_models import Video
+from app.db.sql_engine import get_session, engine
+from app.services.detector import process_video_task
+from app.services.analytics import analytics_service
 
 router = APIRouter()
 
@@ -19,40 +23,12 @@ router = APIRouter()
 MEDIA_DIR = Path(settings.DATA_DIR) / "media"
 INPUT_DIR = MEDIA_DIR / "uploads"
 OUTPUT_DIR = MEDIA_DIR / "outputs"
-TASKS_DIR = Path(settings.DATA_DIR) / "tasks"
 THUMBNAILS_DIR = MEDIA_DIR / "thumbnails"
 
 # Ensure dirs exist
 INPUT_DIR.mkdir(parents=True, exist_ok=True)
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-TASKS_DIR.mkdir(parents=True, exist_ok=True)
 THUMBNAILS_DIR.mkdir(parents=True, exist_ok=True)
-
-# --- Persistence Helpers ---
-def save_task(task_id: str, data: dict):
-    """Save task data to JSON file."""
-    file_path = TASKS_DIR / f"{task_id}.json"
-    with open(file_path, "w") as f:
-        json.dump(data, f, indent=2)
-
-def load_tasks() -> dict:
-    """Load all task JSON files into memory."""
-    loaded_tasks = {}
-    if not TASKS_DIR.exists():
-        return {}
-    
-    for file_path in TASKS_DIR.glob("*.json"):
-        try:
-            with open(file_path, "r") as f:
-                data = json.load(f)
-                loaded_tasks[data["id"]] = data
-        except Exception as e:
-            print(f"Failed to load task {file_path}: {e}")
-    return loaded_tasks
-
-# Initialize tasks from disk
-tasks = load_tasks()
-print(f"Loaded {len(tasks)} tasks from disk.")
 
 def get_video_metadata(video_path: str, thumbnail_path: str) -> dict:
     """Extract first frame as thumbnail and get video duration."""
@@ -90,9 +66,12 @@ def get_video_metadata(video_path: str, thumbnail_path: str) -> dict:
         return result
 
 @router.post("/upload")
-async def upload_video(file: UploadFile = File(...)):
+async def upload_video(
+    file: UploadFile = File(...),
+    session: Session = Depends(get_session)
+):
     """Upload a video file for processing."""
-    task_id = str(uuid.uuid4())
+    task_id = uuid.uuid4()
     filename = f"{task_id}_{file.filename}"
     file_path = INPUT_DIR / filename
     
@@ -104,37 +83,55 @@ async def upload_video(file: UploadFile = File(...)):
     thumb_path = THUMBNAILS_DIR / thumb_filename
     metadata = get_video_metadata(str(file_path), str(thumb_path))
     
-    task_data = {
-        "id": task_id,
-        "status": "pending",
-        "filename": filename,
-        "input_path": str(file_path),
-        "created_at": datetime.now().isoformat(),
-        "name": file.filename,
-        "format": "mp4",
-        "duration": metadata["duration"]
-    }
+    video = Video(
+        id=task_id,
+        filename=filename,
+        input_path=str(file_path),
+        name=file.filename,
+        format="mp4",
+        duration=metadata["duration"],
+        status="pending"
+    )
     
-    if metadata["has_thumbnail"]:
-        task_data["thumbnail_url"] = f"/api/video/{task_id}/thumbnail"
+    session.add(video)
+    session.commit()
+    session.refresh(video)
     
-    tasks[task_id] = task_data
-    save_task(task_id, task_data)
-    
-    return {"task_id": task_id}
+    return {"task_id": str(task_id)}
 
 @router.get("/tasks")
-async def get_tasks():
+async def get_tasks(session: Session = Depends(get_session)):
     """Get all tasks list."""
-    # Convert dict to list and sort by creation (roughly)
-    return sorted(list(tasks.values()), key=lambda x: x.get('created_at', ''), reverse=True)
+    statement = select(Video).order_by(Video.created_at.desc())
+    videos = session.exec(statement).all()
+    
+    # Enrich with thumbnail_url and ensure name
+    results = []
+    for v in videos:
+        v_dict = v.model_dump()
+        v_dict["thumbnail_url"] = f"/api/video/{v.id}/thumbnail"
+        if not v_dict.get("name"):
+             v_dict["name"] = v.filename or "Unnamed Video"
+        
+        # Polyfill progress
+        if v.status == "completed":
+            v_dict["progress"] = 100
+        elif v.status == "failed":
+            v_dict["progress"] = 0
+        else:
+            v_dict["progress"] = 0 
+            
+        results.append(v_dict)
+        
+    return results
 
 @router.get("/{task_id}")
-async def get_task_status(task_id: str):
+async def get_task_status(task_id: uuid.UUID, session: Session = Depends(get_session)):
     """Get status of a specific task."""
-    if task_id not in tasks:
+    video = session.get(Video, task_id)
+    if not video:
         raise HTTPException(status_code=404, detail="Task not found")
-    return tasks[task_id]
+    return video
 
 @router.get("/{task_id}/thumbnail")
 async def get_thumbnail(task_id: str):
@@ -143,91 +140,113 @@ async def get_thumbnail(task_id: str):
     thumb_path = THUMBNAILS_DIR / thumb_filename
     
     if not thumb_path.exists():
-        # Return default placeholder or 404
-        # For now, 404 is fine, frontend can fallback
         raise HTTPException(status_code=404, detail="Thumbnail not found")
         
     return FileResponse(thumb_path, media_type="image/jpeg")
 
 @router.get("/{task_id}/stream")
-async def stream_video(task_id: str):
+async def stream_video(task_id: uuid.UUID, session: Session = Depends(get_session)):
     """Stream the ORIGINAL uploaded video."""
-    if task_id not in tasks:
+    video = session.get(Video, task_id)
+    if not video:
         raise HTTPException(status_code=404, detail="Task not found")
         
-    video_path = tasks[task_id]["input_path"]
-    if not os.path.exists(video_path):
+    if not os.path.exists(video.input_path):
         raise HTTPException(status_code=404, detail="Video file missing")
         
-    return FileResponse(video_path, media_type="video/mp4")
+    return FileResponse(video.input_path, media_type="video/mp4")
 
 @router.get("/{task_id}/result")
-async def stream_result(task_id: str):
+async def stream_result(task_id: uuid.UUID, session: Session = Depends(get_session)):
     """Stream the PROCESSED output video."""
-    if task_id not in tasks:
+    video = session.get(Video, task_id)
+    if not video:
         raise HTTPException(status_code=404, detail="Task not found")
         
     output_filename = f"{task_id}_output.mp4"
     output_path = OUTPUT_DIR / output_filename
     
     if not output_path.exists():
-         # If processing, maybe return a default placeholder or 404
-         if tasks[task_id]["status"] == "processing":
+         if video.status == "processing":
              raise HTTPException(status_code=202, detail="Processing in progress")
          raise HTTPException(status_code=404, detail="Result not found")
          
     return FileResponse(output_path, media_type="video/mp4")
 
-def run_processing_job(task_id: str, request: ProcessRequest):
+def run_processing_job(task_id: uuid.UUID, request: ProcessRequest):
     """Background job wrapper."""
-    try:
-        tasks[task_id]["status"] = "processing"
-        tasks[task_id]["progress"] = 0
-        save_task(task_id, tasks[task_id])
-        
-        input_path = tasks[task_id]["input_path"]
-        output_filename = f"{task_id}_output.mp4"
-        output_path = OUTPUT_DIR / output_filename
-        
-        # Progress callback to update task in memory
-        def on_progress(progress: int):
-            tasks[task_id]["progress"] = progress
-            # Note: Not saving to disk every time to avoid I/O overhead
-        
-        # Run synchronous heavy processing
-        result = process_video_task(
-            input_path=input_path,
-            output_path=str(output_path),
-            zones=request.zones,
-            model_name=request.model,
-            progress_callback=on_progress
-        )
-        
-        tasks[task_id]["status"] = "completed"
-        tasks[task_id]["progress"] = 100
-        tasks[task_id]["result_url"] = f"/api/video/{task_id}/result"
-        tasks[task_id]["count"] = result["count"]
-        tasks[task_id]["events"] = result["events"]
-        print(f"Task {task_id} completed. Count: {result['count']}")
-        save_task(task_id, tasks[task_id])
-        
-    except Exception as e:
-        print(f"Task {task_id} failed: {e}")
-        tasks[task_id]["status"] = "failed"
-        tasks[task_id]["error"] = str(e)
-        save_task(task_id, tasks[task_id])
+    # Create a new session for the background thread
+    with Session(engine) as session:
+        video = session.get(Video, task_id)
+        if not video:
+            print(f"Task {task_id} not found in DB")
+            return
+            
+        try:
+            video.status = "processing"
+            session.add(video)
+            session.commit()
+            
+            output_filename = f"{task_id}_output.mp4"
+            output_path = OUTPUT_DIR / output_filename
+            
+            # Progress callback (basic logging for now)
+            def on_progress(progress: int):
+                # We could update a 'progress' field in DB if we added one
+                pass
+            
+            # Run synchronous heavy processing
+            result = process_video_task(
+                input_path=video.input_path,
+                output_path=str(output_path),
+                zones=request.zones,
+                model_name=request.model,
+                progress_callback=on_progress
+            )
+            
+            # Update DB with success
+            video.status = "completed"
+            video.result_url = f"/api/video/{task_id}/result"
+            video.count = result["count"]
+            session.add(video)
+            session.commit()
+            
+            # --- DUCKDB INGESTION ---
+            print(f"Ingesting {len(result['events'])} events into DuckDB...")
+            analytics_service.insert_detections(task_id, result["events"])
+            
+            print(f"Task {task_id} completed. Count: {result['count']}")
+            
+        except Exception as e:
+            print(f"Task {task_id} failed: {e}")
+            video.status = "failed"
+            video.error = str(e)
+            session.add(video)
+            session.commit()
 
 @router.post("/{task_id}/process")
 async def start_processing(
-    task_id: str, 
+    task_id: uuid.UUID, 
     request: ProcessRequest,
-    background_tasks: BackgroundTasks
+    background_tasks: BackgroundTasks,
+    session: Session = Depends(get_session)
 ):
     """Start asynchronous video processing."""
-    if task_id not in tasks:
+    video = session.get(Video, task_id)
+    if not video:
         raise HTTPException(status_code=404, detail="Task not found")
         
     # Add to background queue
     background_tasks.add_task(run_processing_job, task_id, request)
     
     return {"status": "processing", "message": "Job started in background"}
+
+@router.get("/{task_id}/analytics/heatmap")
+async def get_video_heatmap(task_id: uuid.UUID):
+    """Get heatmap data from DuckDB."""
+    return analytics_service.get_heatmap_data(task_id)
+
+@router.get("/{task_id}/analytics/counts")
+async def get_video_counts(task_id: uuid.UUID):
+    """Get object counts from DuckDB."""
+    return analytics_service.get_object_counts(task_id)

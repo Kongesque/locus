@@ -20,6 +20,8 @@ from app.db.auth import (
     set_password_hash,
 )
 from app.db.database import init_db
+from app.db.sql_engine import create_db_and_tables
+from app.db.duck_engine import init_duckdb
 from app.routers import auth, health, video
 
 # Rate limiter instance
@@ -39,6 +41,8 @@ async def lifespan(app: FastAPI):
     # Initialize databases
     await init_db()
     await init_auth_db()
+    create_db_and_tables()   # SQLite (app.db)
+    init_duckdb()            # DuckDB (analytics.duckdb)
 
     # Handle password reset flag
     if settings.RESET_PASSWORD:

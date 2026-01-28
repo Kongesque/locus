@@ -15,6 +15,8 @@ dependencies = [
     "ultralytics>=8.3.252",
     "opencv-python>=4.12.0.88",
     "supervision>=0.27.0",
+    "duckdb>=0.10.0",
+    "sqlmodel>=0.0.16",
 ]
 
 [project.optional-dependencies]
