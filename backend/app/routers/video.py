@@ -1,6 +1,7 @@
 import shutil
 import uuid
 import os
+import time
 import cv2
 from datetime import datetime
 from pathlib import Path
@@ -8,7 +9,7 @@ from typing import List
 
 from fastapi import APIRouter, UploadFile, File, BackgroundTasks, HTTPException, Depends
 from fastapi.responses import FileResponse
-from sqlmodel import Session, select
+from sqlmodel import Session, select, text
 
 from app.schemas.video import ProcessRequest
 from app.core.config import settings
@@ -113,13 +114,9 @@ async def get_tasks(session: Session = Depends(get_session)):
         if not v_dict.get("name"):
              v_dict["name"] = v.filename or "Unnamed Video"
         
-        # Polyfill progress
+        # Ensure completed is 100%
         if v.status == "completed":
             v_dict["progress"] = 100
-        elif v.status == "failed":
-            v_dict["progress"] = 0
-        else:
-            v_dict["progress"] = 0 
             
         results.append(v_dict)
         
@@ -190,10 +187,22 @@ def run_processing_job(task_id: uuid.UUID, request: ProcessRequest):
             output_filename = f"{task_id}_output.mp4"
             output_path = OUTPUT_DIR / output_filename
             
-            # Progress callback (basic logging for now)
+            # Progress callback
+            last_update = 0
             def on_progress(progress: int):
-                # We could update a 'progress' field in DB if we added one
-                pass
+                nonlocal last_update
+                now = time.time()
+                if now - last_update > 0.5:
+                    try:
+                        # Direct SQL update to avoid ORM confusion/overhead
+                        session.execute(
+                            text("UPDATE video SET progress = :p WHERE id = :id"), 
+                            {"p": progress, "id": task_id.hex}
+                        )
+                        session.commit()
+                        last_update = now
+                    except Exception as e:
+                        print(f"Error saving progress: {e}")
             
             # Run synchronous heavy processing
             result = process_video_task(
@@ -206,6 +215,7 @@ def run_processing_job(task_id: uuid.UUID, request: ProcessRequest):
             
             # Update DB with success
             video.status = "completed"
+            video.progress = 100
             video.result_url = f"/api/video/{task_id}/result"
             video.count = result["count"]
             session.add(video)
@@ -250,3 +260,30 @@ async def get_video_heatmap(task_id: uuid.UUID):
 async def get_video_counts(task_id: uuid.UUID):
     """Get object counts from DuckDB."""
     return analytics_service.get_object_counts(task_id)
+
+@router.delete("/all")
+async def delete_all_data(session: Session = Depends(get_session)):
+    """Dangerously delete ALL data (Videos, Detections, Files)."""
+    from sqlmodel import delete
+    
+    # 1. Clear SQLite
+    session.exec(delete(Video))
+    session.commit()
+    
+    # 2. Clear DuckDB
+    analytics_service.clear_all_data()
+    
+    # 3. Clear Files
+    for dir_path in [INPUT_DIR, OUTPUT_DIR, THUMBNAILS_DIR]:
+        if dir_path.exists():
+            for item in dir_path.iterdir():
+                if item.name == ".gitkeep": continue
+                try:
+                    if item.is_file():
+                        item.unlink()
+                    elif item.is_dir():
+                        shutil.rmtree(item)
+                except Exception as e:
+                    print(f"Failed to delete {item}: {e}")
+                    
+    return {"message": "All data deleted"}

@@ -112,14 +112,15 @@ def process_video_task(
              frame_count += 1
              continue
         
-        frame_count += 1 # Increment after check because read() advanced it
+        frame_count += 1 
             
         # Run YOLO with Tracking
-        # persist=True ensures ID consistency across frames
         results = model.track(frame, persist=True, verbose=False, conf=0.4)
         
         # Progress reporting
         progress = int(frame_count / total_frames * 100)
+        # print(f"DEBUG: Frame {frame_count}/{total_frames} -> {progress}%") 
+        
         if progress_callback:
             progress_callback(progress)
         

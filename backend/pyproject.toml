@@ -17,6 +17,7 @@ dependencies = [
     "supervision>=0.27.0",
     "duckdb>=0.10.0",
     "sqlmodel>=0.0.16",
+    "lapx>=0.5.5",
 ]
 
 [project.optional-dependencies]

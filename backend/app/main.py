@@ -44,6 +44,21 @@ async def lifespan(app: FastAPI):
     create_db_and_tables()   # SQLite (app.db)
     init_duckdb()            # DuckDB (analytics.duckdb)
 
+    # Reset stuck tasks (zombies from previous crashes)
+    from sqlmodel import Session, select
+    from app.db.sql_engine import engine
+    from app.models.sql_models import Video
+    
+    with Session(engine) as session:
+        result = session.exec(select(Video).where(Video.status == "processing")).all()
+        if result:
+            print(f"Resetting {len(result)} stuck tasks to failed.")
+            for v in result:
+                v.status = "failed"
+                v.error = "Interrupted by server restart"
+                session.add(v)
+            session.commit()
+
     # Handle password reset flag
     if settings.RESET_PASSWORD:
         await clear_password_hash()

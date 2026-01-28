@@ -101,6 +101,13 @@ class AnalyticsService:
         """, [str(video_id)]).fetchall()
         conn.close()
         
+        
         return [{"class": row[0], "count": row[1]} for row in result]
+
+    def clear_all_data(self):
+        """Delete ALL detection data."""
+        conn = get_duckdb_connection()
+        conn.execute("DELETE FROM detections")
+        conn.close()
 
 analytics_service = AnalyticsService()

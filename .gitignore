@@ -52,8 +52,10 @@ data/
 docs/
 
 # IDE & Editors
-.agent/
+.agents/
+.gemini/
 .github/
+.cursorrules
 .vscode/
 .idea/
 *.swp

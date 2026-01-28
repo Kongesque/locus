@@ -19,6 +19,7 @@ class Video(VideoBase, table=True):
     result_url: Optional[str] = None
     error: Optional[str] = None
     count: Optional[int] = None
+    progress: int = Field(default=0)
 
     class Config:
         json_schema_extra = {
