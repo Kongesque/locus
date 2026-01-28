@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "./auth-context";
+import EchoLoader from "@/components/echo-loader";
 
 interface AuthGuardProps {
     children: React.ReactNode;
@@ -49,7 +50,8 @@ export function AuthGuard({ children }: AuthGuardProps) {
     // Show loading state while checking auth
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-background">
+            <div className="flex flex-col items-center justify-center min-h-screen bg-background gap-4">
+                <EchoLoader size={48} />
                 <div className="animate-pulse text-muted-foreground">Loading...</div>
             </div>
         );
